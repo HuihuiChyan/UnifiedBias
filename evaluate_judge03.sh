@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=7
 python3 -u evaluate_judge.py \
     --model-name "vicuna-13b" \
     --infer-mode "pairwise" \
