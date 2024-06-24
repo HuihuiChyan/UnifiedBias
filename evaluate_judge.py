@@ -14,7 +14,7 @@ def build_params():
     parser.add_argument(
         "--model-name",
         type=str,
-        choices=("gpt-4-1106-preview", "gpt-3.5-turbo-0613", "llama2-13b-chat", "vicuna-13b"),
+        choices=("gpt-4-1106-preview", "gpt-3.5-turbo-0613", "llama-2-13b-chat", "vicuna-13b"),
         default=None,
     )
     parser.add_argument(
