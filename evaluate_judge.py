@@ -196,11 +196,11 @@ def build_prompt(model_name, infer_mode):
 
 def parse_predictions(review, infer_mode):
     if infer_mode == "pairwise":
-        if "[[A]]" in review:
+        if "[[A]]" in review or "[A]" in review:
             return [1, 0]
-        elif "[[B]]" in review:
+        elif "[[B]]" in review or "[B]" in review:
             return [0, 1]
-        elif "[[C]]" in review:
+        elif "[[C]]" in review  or "[C]" in review:
             return [1, 1]
         else:
             return [0, 0]
