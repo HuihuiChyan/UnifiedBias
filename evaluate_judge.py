@@ -183,7 +183,7 @@ USER: Please act as an impartial judge and evaluate the quality of the responses
 [The Start of Assistant B’s Answer]
 {answer_b}
 [The End of Assistant B’s Answer]
-ASSISTANT: """        
+ASSISTANT:"""        
 
     else:
         if infer_mode == "pairwise":
