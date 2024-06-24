@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=6
 python3 -u evaluate_judge.py \
     --model-name "llama-2-13b-chat" \
     --infer-mode "pairwise" \
