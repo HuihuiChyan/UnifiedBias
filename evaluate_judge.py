@@ -276,6 +276,9 @@ if __name__ == "__main__":
 
         for index, example in dataset.iterrows():
 
+            if index >= 100:
+                break
+
             if args.infer_mode == "pairwise":
                 prompt = instruction.format(question=example["prompt"],
                                             answer_a=example["response_a"],
@@ -284,9 +287,9 @@ if __name__ == "__main__":
 
             elif args.infer_mode == "pointwise":
                 prompt_a = instruction.format(question=example["prompt"],
-                                            answer=example["response_a"])
+                                              answer=example["response_a"])
                 prompt_b = instruction.format(question=example["prompt"],
-                                            answer=example["response_b"])
+                                              answer=example["response_b"])
                 prompts.append(prompt_a)
                 prompts.append(prompt_b)
 
