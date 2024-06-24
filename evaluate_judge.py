@@ -258,10 +258,7 @@ if __name__ == "__main__":
         dataset = data[data_split]
 
         for index, example in dataset.iterrows():
-
-            if index >= 100:
-                break
-
+            
             if args.infer_mode == "pairwise":
                 prompt = instruction.format(question=example["prompt"],
                                             answer_a=example["response_a"],
