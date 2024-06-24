@@ -151,24 +151,24 @@ def build_prompt(model_name, infer_mode):
     if "gpt" in model_name:
         if infer_mode == "pairwise":
             prompt = """[System]
-    Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
-    [User Question]
-    {question}
-    [The Start of Assistant A’s Answer]
-    {answer_a}
-    [The End of Assistant A’s Answer]
-    [The Start of Assistant B’s Answer]
-    {answer_b}
-    [The End of Assistant B’s Answer]"""
+Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
+[User Question]
+{question}
+[The Start of Assistant A’s Answer]
+{answer_a}
+[The End of Assistant A’s Answer]
+[The Start of Assistant B’s Answer]
+{answer_b}
+[The End of Assistant B’s Answer]"""
 
         elif infer_mode == "pointwise":
             prompt = """[System]
-    Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: "[[rating]]", for example: "Rating: [[5]]".
-    [Question]
-    {question}
-    [The Start of Assistant’s Answer]
-    {answer}
-    [The End of Assistant’s Answer]"""
+Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: "[[rating]]", for example: "Rating: [[5]]".
+[Question]
+{question}
+[The Start of Assistant’s Answer]
+{answer}
+[The End of Assistant’s Answer]"""
 
     elif model_name == "vicuna-13b":
         if infer_mode == "pairwise":
@@ -183,29 +183,39 @@ USER: Please act as an impartial judge and evaluate the quality of the responses
 [The Start of Assistant B’s Answer]
 {answer_b}
 [The End of Assistant B’s Answer]
-ASSISTANT:"""        
+ASSISTANT:"""
+        elif infer_mode == "pointwise":
+            prompt = """A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
+
+USER: Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: "[[rating]]", for example: "Rating: [[5]]".
+[Question]
+{question}
+[The Start of Assistant’s Answer]
+{answer}
+[The End of Assistant’s Answer]
+ASSISTANT:"""
 
     else:
         if infer_mode == "pairwise":
             prompt = """[INST]
-    Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
-    [User Question]
-    {question}
-    [The Start of Assistant A’s Answer]
-    {answer_a}
-    [The End of Assistant A’s Answer]
-    [The Start of Assistant B’s Answer]
-    {answer_b}
-    [The End of Assistant B’s Answer] [/INST]"""
+Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
+[User Question]
+{question}
+[The Start of Assistant A’s Answer]
+{answer_a}
+[The End of Assistant A’s Answer]
+[The Start of Assistant B’s Answer]
+{answer_b}
+[The End of Assistant B’s Answer] [/INST]"""
 
         elif infer_mode == "pointwise":
             prompt = """[INST]
-    Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: "[[rating]]", for example: "Rating: [[5]]".
-    [Question]
-    {question}
-    [The Start of Assistant’s Answer]
-    {answer}
-    [The End of Assistant’s Answer] [/INST]"""        
+Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: "[[rating]]", for example: "Rating: [[5]]".
+[Question]
+{question}
+[The Start of Assistant’s Answer]
+{answer}
+[The End of Assistant’s Answer] [/INST]"""        
 
     return prompt
 
@@ -276,9 +286,6 @@ if __name__ == "__main__":
 
         for index, example in dataset.iterrows():
 
-            if index >= 100:
-                break
-
             if args.infer_mode == "pairwise":
                 prompt = instruction.format(question=example["prompt"],
                                             answer_a=example["response_a"],
@@ -301,9 +308,10 @@ if __name__ == "__main__":
                 answers.append([0, 1])
             else:
                 answers.append([1, 1])
-
-        print("Prompt built finished! Sampled prompt:")
+        
+        print("********************************Sampled Prompt********************************")
         print(prompts[random.randint(0, len(prompts)-1)]+"\n")
+        print("******************************Sampled Prompt Ended****************************"+"\n")
 
     if "gpt" not in args.model_name:
         predictions = batched_generation(os.path.join("models", args.model_name), 
@@ -327,7 +335,7 @@ if __name__ == "__main__":
     pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
 
     if args.save_logit is not None:
-        with open(f"{args.data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
+        with open(f"output_data/{args.data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
             for p in zip(predictions, pred_scores):
                 pred_line = {"prediction": p[0], "pred_score": p[1]}
                 fout.write(json.dumps(pred_line)+"\n")

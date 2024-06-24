@@ -1,8 +1,34 @@
+import ast
 import copy
 import random
 import pandas as pd
+import numpy as np
 
-df = pd.read_csv("train.csv")
+df = pd.read_csv("orig_data/train.csv")
+
+# 去除掉轮数超过1的数据
+df["round"] = df.apply(lambda x:len(ast.literal_eval(x.prompt)), axis=1)
+df = df[df["round"]==1]
+
+def convert_response(x):
+    try:
+        x = ast.literal_eval(x)[0]
+    except:
+        x = "null"
+    return x
+
+# 将list数据转化为str
+df["prompt"] = df["prompt"].apply(lambda x:ast.literal_eval(x)[0])
+df["response_a"] = df["response_a"].apply(convert_response)
+df["response_b"] = df["response_b"].apply(convert_response)
+
+# 去除掉response为null的数据
+df = df[(df["response_a"] != "null") & (df["response_b"] != "null")]
+
+# 对不符合utf-8的数据进行转化
+df["prompt"] = df["prompt"].apply(lambda x:str(x).encode('utf-8', 'replace').decode('utf-8'))
+df["response_a"] = df["response_a"].apply(lambda x:str(x).encode('utf-8', 'replace').decode('utf-8'))
+df["response_b"] = df["response_b"].apply(lambda x:str(x).encode('utf-8', 'replace').decode('utf-8'))
 
 # all_models = sorted(list(set(df["model_a"].to_numpy().tolist())))
 # print(all_models) # 共计 64个模型
@@ -64,9 +90,9 @@ def create_self_bias_data(df, sample_num=500):
         self_los_df = pd.concat([self_los_df, self_los_df_rev])
 
         self_bias[model_name] = {"self_win": self_win_df, "self_los": self_los_df}
-
-        self_win_df.to_csv(f'self_win_{model_name}.csv', index=False)
-        self_los_df.to_csv(f'self_los_{model_name}.csv', index=False)
+    
+        self_win_df.to_csv(f'test_data/self_win_{model_name}.csv', index=False)
+        self_los_df.to_csv(f'test_data/self_los_{model_name}.csv', index=False)
     
     return self_bias
 
@@ -88,8 +114,8 @@ def create_verbo_bias_data(df, sample_num=500):
 
     verbo_bias = {"verbo_win": verbo_win_df, "verbo_los": verbo_los_df}
 
-    verbo_win_df.to_csv(f'verbo_win.csv', index=False)
-    verbo_los_df.to_csv(f'verbo_los.csv', index=False)
+    verbo_win_df.to_csv(f'test_data/verbo_win.csv', index=False)
+    verbo_los_df.to_csv(f'test_data/verbo_los.csv', index=False)
 
     return verbo_bias
 
@@ -112,8 +138,8 @@ def create_position_bias_data(df, sample_num=500):
 
     position_bias = {"left_win": left_win_df, "left_los": left_los_df}
 
-    left_win_df.to_csv(f'left_win.csv', index=False)
-    left_los_df.to_csv(f'left_los.csv', index=False)
+    left_win_df.to_csv(f'test_data/left_win.csv', index=False)
+    left_los_df.to_csv(f'test_data/left_los.csv', index=False)
 
     return position_bias
 
@@ -129,12 +155,12 @@ if __name__ == "__main__":
             return "b"
         else:
             return "tie"
-            
+    
     df["longer"] = df.apply(compare_length, axis=1)
 
     self_bias = create_self_bias_data(df)
 
-    # 确保在verbo-bias和position-bias数据中，不包含evaluator模型相关的数据，从而去除self-bias的影响
+    # 确保在verbo-bias和position-bias数据中，不包含evaluator模型及其同组模型相关的数据，从而去除self-bias的影响
     df = df[(~df["model_a"].isin(evaluator_group_models)) & (~df["model_b"].isin(evaluator_group_models))]
 
     verbo_bias = create_verbo_bias_data(df)
