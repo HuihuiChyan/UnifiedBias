@@ -20,7 +20,8 @@ def build_params():
     )
     parser.add_argument(
         "--data-type",
-        type=str,
+        type=str,\
+        nargs='+',
         choices=("self", "position", "verbosity"),
         default=None,
     )
@@ -264,6 +265,35 @@ def calculate_metrics(y_true_list, y_pred_list, infer_type):
 
     return accuracy
 
+def build_dataset(dataset, instruction, infer_mode):
+
+    for index, example in dataset.iterrows():
+        if infer_mode == "pairwise":
+            prompt = instruction.format(question=example["prompt"],
+                                        answer_a=example["response_a"],
+                                        answer_b=example["response_b"])
+            prompts.append(prompt)
+
+        elif infer_mode == "pointwise":
+            prompt_a = instruction.format(question=example["prompt"],
+                                        answer=example["response_a"])
+            prompt_b = instruction.format(question=example["prompt"],
+                                        answer=example["response_b"])
+            prompts.append(prompt_a)
+            prompts.append(prompt_b)
+
+        assert example["winner_model_a"] + example["winner_model_b"] + example["winner_tie"] == 1
+
+        if example["winner_model_a"] == 1:
+            answers.append([1, 0])
+        elif example["winner_model_b"] == 1:
+            answers.append([0, 1])
+        else:
+            answers.append([1, 1])
+    
+    return prompts, answers
+    
+
 def init(c):
     global counter
     counter = c
@@ -273,78 +303,57 @@ if __name__ == "__main__":
     random.seed(42)
     parser = build_params()
     args = parser.parse_args()
-
-    data = load_dataset(args.data_type, args.model_name)
-
-    instruction = build_prompt(args.model_name, args.infer_mode)
-
-    prompts = []
-    answers = []
-    for data_split in ["win", "los"]:
+    result_dicts = {}
+    for data_type in args.data_type:
+        data = load_dataset(data_type, args.model_name)
         
-        dataset = data[data_split]
+        instruction = build_prompt(args.model_name, args.infer_mode)
 
-        for index, example in dataset.iterrows():
+        prompts = []
+        answers = []
+        for data_split in ["win", "los"]:
+            
+            dataset = data[data_split]
 
-            if args.infer_mode == "pairwise":
-                prompt = instruction.format(question=example["prompt"],
-                                            answer_a=example["response_a"],
-                                            answer_b=example["response_b"])
-                prompts.append(prompt)
+            prompts, answers = build_dataset(dataset, instruction, args.infer_mode)
 
-            elif args.infer_mode == "pointwise":
-                prompt_a = instruction.format(question=example["prompt"],
-                                              answer=example["response_a"])
-                prompt_b = instruction.format(question=example["prompt"],
-                                              answer=example["response_b"])
-                prompts.append(prompt_a)
-                prompts.append(prompt_b)
+            print("********************************Sampled Prompt********************************")
+            print(prompts[random.randint(0, len(prompts)-1)]+"\n")
+            print("******************************Sampled Prompt Ended****************************"+"\n")
 
-            assert example["winner_model_a"] + example["winner_model_b"] + example["winner_tie"] == 1
-
-            if example["winner_model_a"] == 1:
-                answers.append([1, 0])
-            elif example["winner_model_b"] == 1:
-                answers.append([0, 1])
-            else:
-                answers.append([1, 1])
-        
-        print("********************************Sampled Prompt********************************")
-        print(prompts[random.randint(0, len(prompts)-1)]+"\n")
-        print("******************************Sampled Prompt Ended****************************"+"\n")
-
-    if "gpt" not in args.model_name:
-        predictions = batched_generation(os.path.join("models", args.model_name), 
-                                         prompts,
-                                         max_new_token=args.max_new_token,
-                                         temperature=args.temperature,
-                                         top_p=args.top_p)
-    else:
-        manager = multiprocessing.Manager()
-        counter = manager.Value("counter", 0)
-        pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
-
-        if args.process_num == 1:
-            predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                        for sample in prompts]
+        if "gpt" not in args.model_name:
+            predictions = batched_generation(os.path.join("models", args.model_name), 
+                                            prompts,
+                                            max_new_token=args.max_new_token,
+                                            temperature=args.temperature,
+                                            top_p=args.top_p)
         else:
-            pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-            predictions = pool.map(pool_fn, prompts)
-            pool.close()
+            manager = multiprocessing.Manager()
+            counter = manager.Value("counter", 0)
+            pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
 
-    pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
+            if args.process_num == 1:
+                predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
+                            for sample in prompts]
+            else:
+                pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
+                predictions = pool.map(pool_fn, prompts)
+                pool.close()
 
-    if args.save_logit is not None:
-        with open(f"output_data/{args.data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
-            for p in zip(predictions, pred_scores):
-                pred_line = {"prediction": p[0], "pred_score": p[1]}
-                fout.write(json.dumps(pred_line)+"\n")
+        pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
 
-    win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
-    los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
-    diff = win_acc-los_acc
+        if args.save_logit is not None:
+            with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
+                for p in zip(predictions, pred_scores):
+                    pred_line = {"prediction": p[0], "pred_score": p[1]}
+                    fout.write(json.dumps(pred_line)+"\n")
 
-    print("**********************************************")
-    print(f"Model: {args.model_name}, Data: {args.data_type}, Infer: {args.infer_mode}")
-    print(f"Win accuracy: {win_acc}, Lose accuracy: {los_acc}, Diff is: {diff}")
-    print("**********************************************")
+        win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
+        los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
+        result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc}
+
+    for data_type in args.data_type:
+        print("**********************************************")
+        print(f"Model: {args.model_name}, Data: {data_type}, Infer: {args.infer_mode}")
+        print(result_dicts[data_type])
+        print("**********************************************")
