@@ -352,6 +352,8 @@ if __name__ == "__main__":
         los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
         result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc}
 
+        print(result_dicts)
+
     for data_type in args.data_type:
         print("**********************************************")
         print(f"Model: {args.model_name}, Data: {data_type}, Infer: {args.infer_mode}")
