@@ -148,7 +148,7 @@ def load_dataset(data_type, model_name):
     return data
 
 def build_prompt(model_name, infer_mode):
-    if "gpt" in model_name:
+    if "gpt" in model_name or model_name == "vicuna-13b":
         if infer_mode == "pairwise":
             prompt = """[System]
     Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
@@ -195,6 +195,7 @@ def build_prompt(model_name, infer_mode):
     return prompt
 
 def parse_predictions(review, infer_mode):
+
     if infer_mode == "pairwise":
         if "[[A]]" in review or "[A]" in review:
             return [1, 0]
@@ -204,6 +205,7 @@ def parse_predictions(review, infer_mode):
             return [1, 1]
         else:
             return [0, 0]
+
     elif infer_mode == "pointwise":
         if "[[" in review:
             pos = review.rfind("[[")
@@ -258,7 +260,10 @@ if __name__ == "__main__":
         dataset = data[data_split]
 
         for index, example in dataset.iterrows():
-            
+
+            if index >= 100:
+                break
+
             if args.infer_mode == "pairwise":
                 prompt = instruction.format(question=example["prompt"],
                                             answer_a=example["response_a"],
@@ -307,7 +312,7 @@ if __name__ == "__main__":
     pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
 
     if args.save_logit is not None:
-        with open(f"{args.data_type}-{args.model_name}-{args.infer_mode}.csv", "w", encoding="utf-8") as fout:
+        with open(f"{args.data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
             for p in zip(predictions, pred_scores):
                 pred_line = {"prediction": p[0], "pred_score": p[1]}
                 fout.write(json.dumps(pred_line)+"\n")
