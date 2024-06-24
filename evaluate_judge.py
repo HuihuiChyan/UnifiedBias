@@ -262,10 +262,11 @@ if __name__ == "__main__":
         print(prompts[random.randint(0, len(prompts)-1)]+"\n")
 
         if "gpt" not in args.model_name:
-            predictions = batched_generation(args.model_name, prompts,
-                                            max_new_token=args.max_new_token,
-                                            temperature=args.temperature,
-                                            top_p=args.top_p)
+            predictions = batched_generation(os.path.join("models", args.model_name), 
+                                             prompts,
+                                             max_new_token=args.max_new_token,
+                                             temperature=args.temperature,
+                                             top_p=args.top_p)
         else:
             manager = multiprocessing.Manager()
             counter = manager.Value("counter", 0)
@@ -277,6 +278,7 @@ if __name__ == "__main__":
             else:
                 pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
                 predictions = pool.map(pool_fn, prompts)
+                pool.close()
 
         pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
 

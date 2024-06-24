@@ -129,6 +129,7 @@ if __name__ == "__main__":
             return "b"
         else:
             return "tie"
+            
     df["longer"] = df.apply(compare_length, axis=1)
 
     self_bias = create_self_bias_data(df)
