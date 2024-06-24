@@ -1,4 +1,4 @@
 orig_data/
-*.csv
+# *.csv
 .DS_Store
 models/
