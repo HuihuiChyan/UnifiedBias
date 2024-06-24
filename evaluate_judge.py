@@ -186,7 +186,7 @@ def parse_predictions(review, infer_mode):
             pos = review.rfind("[[")
             pos2 = review.find("]]", pos)
             assert pos != -1 and pos2 != -1
-            return float(review[pos + len("Rating: [["):pos2].strip())
+            return float(review[pos + len("[["):pos2].strip())
         else:
             return 5.0
 
@@ -228,13 +228,16 @@ if __name__ == "__main__":
 
     instruction = build_prompt(args.model_name, args.infer_mode)
 
-    accuracy_dict = {}
+    prompts = []
+    answers = []
     for data_split in ["win", "los"]:
         
         dataset = data[data_split]
-        prompts = []
-        answers = []
+
         for index, example in dataset.iterrows():
+
+            if index >= 100:
+                break
 
             if args.infer_mode == "pairwise":
                 prompt = instruction.format(question=example["prompt"],
@@ -262,36 +265,37 @@ if __name__ == "__main__":
         print("Prompt built finished! Sampled prompt:")
         print(prompts[random.randint(0, len(prompts)-1)]+"\n")
 
-        if "gpt" not in args.model_name:
-            predictions = batched_generation(os.path.join("models", args.model_name), 
-                                             prompts,
-                                             max_new_token=args.max_new_token,
-                                             temperature=args.temperature,
-                                             top_p=args.top_p)
+    if "gpt" not in args.model_name:
+        predictions = batched_generation(os.path.join("models", args.model_name), 
+                                         prompts,
+                                         max_new_token=args.max_new_token,
+                                         temperature=args.temperature,
+                                         top_p=args.top_p)
+    else:
+        manager = multiprocessing.Manager()
+        counter = manager.Value("counter", 0)
+        pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
+
+        if args.process_num == 1:
+            predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
+                        for sample in prompts]
         else:
-            manager = multiprocessing.Manager()
-            counter = manager.Value("counter", 0)
-            pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
+            pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
+            predictions = pool.map(pool_fn, prompts)
+            pool.close()
 
-            if args.process_num == 1:
-                predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                            for sample in prompts]
-            else:
-                pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                predictions = pool.map(pool_fn, prompts)
-                pool.close()
+    pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
 
-        pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
+    if args.save_logit is not None:
+        with open(f"{args.data_type}-{args.model_name}-{args.infer_mode}.csv", "w", encoding="utf-8") as fout:
+            for p in zip(predictions, pred_scores):
+                pred_line = {"prediction": p[0], "pred_score": p[1]}
+                fout.write(json.dumps(pred_line)+"\n")
 
-        if args.save_logit is not None:
-            with open(f"{args.data_type}-{args.model_name}-{args.infer_mode}-{data_split}.csv", "w", encoding="utf-8") as fout:
-                for p in zip(predictions, pred_scores):
-                    pred_line = {"prediction": p[0], "pred_score": p[1]}
-                    fout.write(json.dumps(pred_line)+"\n")
+    win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
+    los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
+    diff = accuracy_dict["win"]-accuracy_dict["los"]
 
-        accuracy_dict[data_split] = calculate_metrics(answers, pred_scores, args.infer_mode)
-
-    win_acc, los_acc, diff = accuracy_dict["win"], accuracy_dict["los"], accuracy_dict["win"]-accuracy_dict["los"]
     print("**********************************************")
     print(f"Model: {args.model_name}, Data: {args.data_type}, Infer: {args.infer_mode}")
     print(f"Win accuracy: {win_acc}, Lose accuracy: {los_acc}, Diff is: {diff}")
