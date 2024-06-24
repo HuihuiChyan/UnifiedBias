@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
     win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
     los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
-    diff = accuracy_dict["win"]-accuracy_dict["los"]
+    diff = win_acc-los_acc
 
     print("**********************************************")
     print(f"Model: {args.model_name}, Data: {args.data_type}, Infer: {args.infer_mode}")
