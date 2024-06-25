@@ -139,4 +139,4 @@ if __name__ == "__main__":
     with open(relia_file, "w") as file_out:
         json.dump(results, file_out, indent=4)
 
-    print(f"All reliability scores have been saved to {args.output_file}.")
+    print(f"All reliability scores have been saved to {relia_file}.")
