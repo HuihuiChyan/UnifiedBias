@@ -311,8 +311,8 @@ def build_dataset(dataset, instruction, infer_mode):
     answers = []
     for index, example in enumerate(dataset):
         
-        if index >= 100:
-            break
+        # if index >= 100:
+        #     break
 
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     result_dicts = {}
 
-    data_type = arga.data_type[0]
+    data_type = args.data_type[0]
 
     dataset = load_dataset(data_type)
     
