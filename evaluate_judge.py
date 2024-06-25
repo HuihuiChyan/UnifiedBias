@@ -5,6 +5,7 @@ import torch
 import argparse
 import random
 import time
+import tqdm
 import requests
 import pandas as pd
 import multiprocessing
@@ -304,6 +305,8 @@ def calculate_bias_diff(y_true_list1, y_pred_list1, y_true_list2, y_pred_list2):
 
 def build_dataset(dataset, instruction, infer_mode):
 
+    prompts = []
+    answers = []
     for index, example in dataset.iterrows():
         
         # if index >= 50:
@@ -356,11 +359,14 @@ if __name__ == "__main__":
             
             dataset = data[data_split]
 
-            prompts, answers = build_dataset(dataset, instruction, args.infer_mode)
+            prompts_split, answers_split = build_dataset(dataset, instruction, args.infer_mode)
 
-            print("********************************Sampled Prompt********************************")
-            print(prompts[random.randint(0, len(prompts)-1)]+"\n")
-            print("******************************Sampled Prompt Ended****************************"+"\n")
+            prompts.extend(prompts_split)
+            answers.extend(answers_split)
+
+        print("********************************Sampled Prompt********************************")
+        print(prompts[random.randint(0, len(prompts)-1)]+"\n")
+        print("******************************Sampled Prompt Ended****************************"+"\n")
 
         logit_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"
         if not args.rewrite_logit and os.path.exists(logit_file):
@@ -378,10 +384,13 @@ if __name__ == "__main__":
                 manager = multiprocessing.Manager()
                 counter = manager.Value("counter", 0)
                 pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
-
+                
+                len_prompts = len(prompts)
+                print(f"Totally {len_prompts} prompts.")
+                
                 if args.process_num == 1:
                     predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                                for sample in prompts]
+                                   for sample in prompts]
                 else:
                     pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
                     predictions = pool.map(pool_fn, prompts)
