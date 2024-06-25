@@ -306,8 +306,8 @@ def build_dataset(dataset, instruction, infer_mode):
 
     for index, example in dataset.iterrows():
         
-        if index >= 50:
-            break
+        # if index >= 50:
+        #     break
 
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
@@ -317,9 +317,9 @@ def build_dataset(dataset, instruction, infer_mode):
 
         elif infer_mode == "pointwise":
             prompt_a = instruction.format(question=example["prompt"],
-                                        answer=example["response_a"])
+                                          answer=example["response_a"])
             prompt_b = instruction.format(question=example["prompt"],
-                                        answer=example["response_b"])
+                                          answer=example["response_b"])
             prompts.append(prompt_a)
             prompts.append(prompt_b)
 
@@ -370,10 +370,10 @@ if __name__ == "__main__":
         else:
             if "gpt" not in args.model_name:
                 predictions = batched_generation(os.path.join("models", args.model_name), 
-                                                prompts,
-                                                max_new_token=args.max_new_token,
-                                                temperature=args.temperature,
-                                                top_p=args.top_p)
+                                                 prompts,
+                                                 max_new_token=args.max_new_token,
+                                                 temperature=args.temperature,
+                                                 top_p=args.top_p)
             else:
                 manager = multiprocessing.Manager()
                 counter = manager.Value("counter", 0)
