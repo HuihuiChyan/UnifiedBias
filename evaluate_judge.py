@@ -401,8 +401,6 @@ if __name__ == "__main__":
             predictions = [[pred[0], pred[1]] for pred in zip(predictions_a, predictions_b)]
             pred_scores = [[pred[0], pred[1]] for pred in zip(pred_scores_a, pred_scores_b)]
 
-        import pdb;pdb.set_trace()
-
         win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
         los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
         bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
