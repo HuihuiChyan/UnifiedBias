@@ -135,7 +135,8 @@ if __name__ == "__main__":
             variance, torch.Tensor) else variance)
 
     # 将所有结果写入 JSON 文件
-    with open(args.output_file, "w") as file_out:
+    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-relia.json"
+    with open(relia_file, "w") as file_out:
         json.dump(results, file_out, indent=4)
 
     print(f"All reliability scores have been saved to {args.output_file}.")

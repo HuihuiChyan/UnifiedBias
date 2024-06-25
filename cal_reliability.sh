@@ -4,8 +4,7 @@ python3 -u cal_reliability.py \
     --model-name "llama-2-13b-chat" \
     --infer-mode "pairwise" \
     --data-type "pandalm" \
-    --max-new-token 512 \
-    --output-file "output_data/${MODEL_TYPE}-${DATA_TYPE}-relia.json"
+    --max-new-token 512
 
 # python3 -u src/evaluate_reliability.py \
 #     --model-type ${MODEL_TYPE} \
