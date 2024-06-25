@@ -107,7 +107,8 @@ if __name__ == "__main__":
     print(prompts[random.randint(0, len(prompts)-1)]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
-    predictions, prefix_lens, target_lens, output_ids = get_multi_answer(args.model_name_or_path, prompts, args.max_new_token)
+    model_path = os.path.join("models", args.model_name)
+    predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
 
     gc.collect()
     torch.cuda.empty_cache()
@@ -115,8 +116,7 @@ if __name__ == "__main__":
     # 初始化结果字典
     results = {"Entropy": [], "Variance": []}
 
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model_name_or_path).half().to(device)
+    model = AutoModelForCausalLM.from_pretrained(model_path).half().to(device)
     model.eval()
 
     for i in tqdm(range(len(predictions)), desc="Calculating reliability score"):

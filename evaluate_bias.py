@@ -364,10 +364,10 @@ if __name__ == "__main__":
     else:
         if "gpt" not in args.model_name:
             predictions = batched_generation(os.path.join("models", args.model_name), 
-                                                prompts,
-                                                max_new_token=args.max_new_token,
-                                                temperature=args.temperature,
-                                                top_p=args.top_p)
+                                             prompts,
+                                             max_new_token=args.max_new_token,
+                                             temperature=args.temperature,
+                                             top_p=args.top_p)
         else:
             manager = multiprocessing.Manager()
             counter = manager.Value("counter", 0)
