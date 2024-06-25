@@ -306,8 +306,8 @@ def build_dataset(dataset, instruction, infer_mode):
 
     for index, example in dataset.iterrows():
         
-        # if index >= 50:
-        #     break
+        if index >= 50:
+            break
 
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
