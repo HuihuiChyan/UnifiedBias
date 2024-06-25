@@ -2,7 +2,7 @@ import json
 import numpy as np
 import random
 import argparse
-from evaluate_judge import calculate_metrics, build_dataset, build_params
+from evaluate_judge import calculate_metrics, build_dataset, build_params, parse_predictions
 
 
 def load_results(file_path):
@@ -95,26 +95,27 @@ def main():
     np.random.seed(42)
 
     parser = build_params()
-    parser.add_argument("--output-file", type=str, default=None)
     args = parser.parse_args()
 
-    dataset = build_dataset(args.data_type, "./data")
+    dataset = load_dataset(data_type)
     answers = [example["score"] for example in dataset]
 
-    entropy_results = load_results(args.output_file)["Entropy"]
-    entropy_cali_results = load_results(args.output_file)["entropy_cali"]
+    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-relia.json"
+    relia_scores = load_results(args.output_file)["Entropy"]
 
-    with open(args.logit_file, 'r') as f:
-        judge_output = [json.loads(line.strip()) for line in f.readlines()]
+    logit_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"
 
-    for cali_factor in [0.0, 0.5, 1.0]:
-        relia_scores = compute_calibrated_score(entropy_results, entropy_cali_results, cali_factor=cali_factor)
+    with open(logit_file, "r", encoding="utf-8") as fin:
+        lines = [json.loads(line.strip()) for line in fin.readlines()]
+        predictions = [line["prediction"] for line in lines]
 
-        # 计算指标的准确率
-        accuracy_rate = compute_accuracy_rate(
-            relia_scores, answers, judge_output, len(relia_scores), args.data_type)
+    pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
 
-        print(f"Accuracy Rate calibrated by {cali_factor}: {accuracy_rate}")
+    # 计算指标的准确率
+    accuracy_rate = compute_accuracy_rate(
+        relia_scores, answers, pred_scores, len(relia_scores), args.data_type)
+
+    print(f"Accuracy Rate calibrated by {cali_factor}: {accuracy_rate}")
 
     # 随机选择基线准确率
     if args.data_type == "auto-j":
