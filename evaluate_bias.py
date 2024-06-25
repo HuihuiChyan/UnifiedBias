@@ -345,12 +345,7 @@ def build_dataset(dataset, instruction, infer_mode):
 
         assert example["winner_model_a"] + example["winner_model_b"] + example["winner_tie"] == 1
 
-        if example["winner_model_a"] == 1:
-            answers.append([1, 0])
-        elif example["winner_model_b"] == 1:
-            answers.append([0, 1])
-        else:
-            answers.append([1, 1])
+        answers.append(example["score"])
     
     return prompts, answers
     
