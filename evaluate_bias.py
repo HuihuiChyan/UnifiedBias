@@ -324,7 +324,7 @@ def build_dataset(dataset, instruction, infer_mode):
 
     prompts = []
     answers = []
-    for index, example in dataset.iterrows():
+    for index, example in enumerate(dataset):
         
         # if index >= 100:
         #     break
