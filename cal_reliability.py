@@ -110,6 +110,8 @@ if __name__ == "__main__":
     model_path = os.path.join("models", args.model_name)
     predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
 
+    import pdb;pdb.set_trace()
+
     gc.collect()
     torch.cuda.empty_cache()
 
