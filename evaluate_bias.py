@@ -344,7 +344,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     result_dicts = {}
 
-    dataset = load_dataset(args.data_type)
+    data_type = arga.data_type[0]
+
+    dataset = load_dataset(data_type)
     
     instruction = build_prompt(args.model_name, args.infer_mode)
 
@@ -354,7 +356,7 @@ if __name__ == "__main__":
     print(prompts[random.randint(0, len(prompts)-1)]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
-    logit_file = f"output_data/{args.data_type}-{args.model_name}-{args.infer_mode}.jsonl"
+    logit_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"
     if not args.rewrite_logit and os.path.exists(logit_file):
         with open(logit_file, "r", encoding="utf-8") as fin:
             lines = [json.loads(line.strip()) for line in fin.readlines()]
@@ -383,7 +385,7 @@ if __name__ == "__main__":
                 pool.close()
 
     pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
-    with open(f"output_data/{args.data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
+    with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
         for p in zip(predictions, pred_scores):
             pred_line = {"prediction": p[0], "pred_score": p[1]}
             fout.write(json.dumps(pred_line)+"\n")
