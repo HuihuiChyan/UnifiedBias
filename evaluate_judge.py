@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import torch
 import argparse
@@ -233,13 +234,19 @@ def parse_predictions(review, infer_mode):
             return [0, 0]
 
     elif infer_mode == "pointwise":
-        if "[[" in review:
-            pos = review.rfind("[[")
+        if "Rating: [[" in review:
+            pos = review.rfind("Rating: [[")
             pos2 = review.find("]]", pos)
             assert pos != -1 and pos2 != -1
-            return float(review[pos + len("[["):pos2].strip())
-        else:
-            return 5.0
+            return float(review[pos + len("Rating: [["):pos2].strip())
+        elif "Rating: " in review:
+            pos = review.rfind("Rating: ")
+            score = re.search(r"[0-9\.]+", review[pos + len("Rating: ")])
+            try:
+                score = float(score.group())
+            except:
+                import pdb;pdb.set_trace()
+            return score
 
 def calculate_metrics(y_true_list, y_pred_list, infer_type):
 
@@ -254,12 +261,8 @@ def calculate_metrics(y_true_list, y_pred_list, infer_type):
                 win_list.append(0)
         return win_list
 
-    if infer_type == "pairwise":
-        y_true = translate_score_to_win_list(y_true_list)
-        y_pred = translate_score_to_win_list(y_pred_list)
-    else:
-        y_true = y_true_list
-        y_pred = y_pred_list
+    y_true = translate_score_to_win_list(y_true_list)
+    y_pred = translate_score_to_win_list(y_pred_list)
 
     accuracy = accuracy_score(y_true, y_pred)
 
@@ -294,6 +297,10 @@ def calculate_bias_diff(y_true_list1, y_pred_list1, y_true_list2, y_pred_list2):
 def build_dataset(dataset, instruction, infer_mode):
 
     for index, example in dataset.iterrows():
+        
+        # if index >= 50:
+        #     break
+
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
                                         answer_a=example["response_a"],
@@ -352,7 +359,6 @@ if __name__ == "__main__":
             with open(logit_file, "r", encoding="utf-8") as fin:
                 lines = [json.loads(line.strip()) for line in fin.readlines()]
                 predictions = [line["prediction"] for line in lines]
-                pred_scores = [line["pred_score"] for line in lines]
         else:
             if "gpt" not in args.model_name:
                 predictions = batched_generation(os.path.join("models", args.model_name), 
@@ -373,12 +379,21 @@ if __name__ == "__main__":
                     predictions = pool.map(pool_fn, prompts)
                     pool.close()
 
-            pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
-
+        pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
         with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
             for p in zip(predictions, pred_scores):
                 pred_line = {"prediction": p[0], "pred_score": p[1]}
                 fout.write(json.dumps(pred_line)+"\n")
+
+        if args.infer_mode == "pointwise":
+            predictions_a = [pred for pred in predictions[0::2]]
+            predictions_b = [pred for pred in predictions[1::2]]
+            pred_scores_a = [pred for pred in pred_scores[0::2]]
+            pred_scores_b = [pred for pred in pred_scores[1::2]]
+            predictions = [[pred[0], pred[1]] for pred in zip(predictions_a, predictions_b)]
+            pred_scores = [[pred[0], pred[1]] for pred in zip(pred_scores_a, pred_scores_b)]
+
+        import pdb;pdb.set_trace()
 
         win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
         los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
