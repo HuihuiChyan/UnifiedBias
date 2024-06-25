@@ -146,7 +146,11 @@ def load_dataset(data_type, data_path = "./test_data"):
         lines = json.load(fin)
 
     dataset = []
-    for line in lines:
+    for index, line in enumerate(lines):
+
+        if index >= 100:
+            break
+
         example = {}
         if line["input"].strip() == "":
             example["prompt"] = line["instruction"]
@@ -310,9 +314,6 @@ def build_dataset(dataset, instruction, infer_mode):
     prompts = []
     answers = []
     for index, example in enumerate(dataset):
-        
-        if index >= 100:
-            break
 
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
