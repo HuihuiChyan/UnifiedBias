@@ -398,4 +398,4 @@ if __name__ == "__main__":
 
     metrics_dict = calculate_metrics(answers, pred_scores, args.infer_mode)
 
-    print(result_dicts)
+    print(metrics_dict)
