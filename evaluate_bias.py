@@ -291,34 +291,19 @@ def calculate_metrics(y_true_list, y_pred_list, infer_type):
     y_pred = translate_score_to_win_list(y_pred_list)
 
     accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, average='macro')
+    recall = recall_score(y_true, y_pred, average='macro')
+    f1 = f1_score(y_true, y_pred, average='macro')
 
-    return accuracy
+    # add metrics to dict
+    metrics_dict = {
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1': f1,
+    }
 
-def calculate_bias_diff(y_true_list1, y_pred_list1, y_true_list2, y_pred_list2):
-
-    def translate_score_to_win_list(score_list, T=0.0):
-        win_list = []
-        for i in range(len(score_list)):
-            if score_list[i][0] - score_list[i][1] > T:
-                win_list.append(1)
-            elif score_list[i][1] - score_list[i][0] > T:
-                win_list.append(-1)
-            else:
-                win_list.append(0)
-        return win_list
-
-    y_true1 = translate_score_to_win_list(y_true_list1)
-    y_pred1 = translate_score_to_win_list(y_pred_list1)
-
-    y_true2 = translate_score_to_win_list(y_true_list2)
-    y_pred2 = translate_score_to_win_list(y_pred_list2)
-
-    y_pos = sum([int(y[0] == y[1]) for y in zip(y_true1, y_pred1)]) + sum([int(y[0] == -y[1]) for y in zip(y_true2, y_pred2)])
-    y_neg = sum([int(y[0] == -y[1]) for y in zip(y_true1, y_pred1)]) + sum([int(y[0] == y[1]) for y in zip(y_true2, y_pred2)])
-
-    bias_diff = (y_pos - y_neg)/(len(y_true1) + len(y_true2))
-
-    return bias_diff
+    return metrics_dict
 
 def build_dataset(dataset, instruction, infer_mode):
 
@@ -411,9 +396,6 @@ if __name__ == "__main__":
         predictions = [[pred[0], pred[1]] for pred in zip(predictions_a, predictions_b)]
         pred_scores = [[pred[0], pred[1]] for pred in zip(pred_scores_a, pred_scores_b)]
 
-    win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
-    los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
-    bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
-    result_dicts[args.data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
+    metrics_dict = calculate_metrics(answers, pred_scores, args.infer_mode)
 
     print(result_dicts)
