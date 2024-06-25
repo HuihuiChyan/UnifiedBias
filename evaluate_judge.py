@@ -8,6 +8,7 @@ import time
 import requests
 import pandas as pd
 import multiprocessing
+import timeout_decorator
 from functools import partial
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, cohen_kappa_score
 
@@ -91,6 +92,14 @@ def batched_generation(
 
     return pred_list
 
+@timeout_decorator.timeout(60)
+def do_one_request(url, headers, data):
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    response = response.json()
+    res = response['choices'][0]['message']['content'].strip()
+
+    return res
+
 def request_gpt(prompt, model, temperature, max_new_tokens):
     url = "https://www.qwopenai.com/v1/chat/completions"
     headers = {
@@ -114,9 +123,7 @@ def request_gpt(prompt, model, temperature, max_new_tokens):
                     {"role": "user", "content": prompt}
                 ]
             }
-            response = requests.post(url, headers=headers, data=json.dumps(data))
-            response = response.json()
-            res = response['choices'][0]['message']['content'].strip()
+            res = do_one_request(url, headers, data)
             break
         except Exception as e:
             print("Exception! The response is " + str(response))
@@ -242,11 +249,12 @@ def parse_predictions(review, infer_mode):
         elif "Rating: " in review:
             pos = review.rfind("Rating: ")
             score = re.search(r"[0-9\.]+", review[pos + len("Rating: ")])
-            try:
-                score = float(score.group())
-            except:
-                import pdb;pdb.set_trace()
-            return score
+            if score is not None:
+                return float(score.group())
+            else:
+                return 5.1
+        else:
+            return 5.1
 
 def calculate_metrics(y_true_list, y_pred_list, infer_type):
 
