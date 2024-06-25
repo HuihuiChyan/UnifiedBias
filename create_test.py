@@ -33,11 +33,13 @@ df["response_b"] = df["response_b"].apply(lambda x:str(x).encode('utf-8', 'repla
 all_models = sorted(list(set(df["model_a"].to_numpy().tolist())))
 print(all_models) # 共计 64个模型
 
+all_models_count = {}
 for model_name in all_models:
-    print(model_name)
-    print(len(df[(df["model_a"] == model_name) | (df["model_b"] == model_name)]))
+    all_models_count[model_name] = len(df[(df["model_a"] == model_name) | (df["model_b"] == model_name)])
 
-exit()
+print(all_models_count)
+
+import pdb;pdb.set_trace()
 
 # 我们选择了比较有代表性的四个模型作为本次评测的基础
 evaluator_models = ["gpt-4-1106-preview", "gpt-3.5-turbo-0613", "vicuna-13b", "llama-2-13b-chat"]

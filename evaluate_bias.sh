@@ -1,6 +1,6 @@
 export CUDA_VISIBLE_DEVICES=4
-python3 -u evaluate_judge.py \
+python3 -u evaluate_bias.py \
     --model-name "llama-2-13b-chat" \
     --infer-mode "pairwise" \
-    --data-type "self" \
-    --max-new-token 1024
+    --data-type "pandalm" \
+    --max-new-token 512
