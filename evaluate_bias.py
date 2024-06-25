@@ -398,7 +398,7 @@ if __name__ == "__main__":
                 pool.close()
 
     pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
-    with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
+    with open(f"output_data/{args.data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
         for p in zip(predictions, pred_scores):
             pred_line = {"prediction": p[0], "pred_score": p[1]}
             fout.write(json.dumps(pred_line)+"\n")
