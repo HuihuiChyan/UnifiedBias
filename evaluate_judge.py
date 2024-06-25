@@ -8,7 +8,7 @@ import requests
 import pandas as pd
 import multiprocessing
 from functools import partial
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, cohen_kappa_score
 
 def build_params():
     parser = argparse.ArgumentParser()
@@ -55,7 +55,7 @@ def build_params():
         help="The temperature for sampling.",
     )
     parser.add_argument(
-        "--save-logit",
+        "--rewrite-logit",
         action="store_true",
         default=False,
     )
@@ -265,6 +265,32 @@ def calculate_metrics(y_true_list, y_pred_list, infer_type):
 
     return accuracy
 
+def calculate_bias_diff(y_true_list1, y_pred_list1, y_true_list2, y_pred_list2):
+
+    def translate_score_to_win_list(score_list, T=0.0):
+        win_list = []
+        for i in range(len(score_list)):
+            if score_list[i][0] - score_list[i][1] > T:
+                win_list.append(1)
+            elif score_list[i][1] - score_list[i][0] > T:
+                win_list.append(-1)
+            else:
+                win_list.append(0)
+        return win_list
+
+    y_true1 = translate_score_to_win_list(y_true_list1)
+    y_pred1 = translate_score_to_win_list(y_pred_list1)
+
+    y_true2 = translate_score_to_win_list(y_true_list2)
+    y_pred2 = translate_score_to_win_list(y_pred_list2)
+
+    y_pos = sum([int(y[0] == y[1]) for y in zip(y_true1, y_pred1)]) + sum([int(y[0] == -y[1]) for y in zip(y_true2, y_pred2)])
+    y_neg = sum([int(y[0] == -y[1]) for y in zip(y_true1, y_pred1)]) + sum([int(y[0] == y[1]) for y in zip(y_true2, y_pred2)])
+
+    bias_diff = (y_pos - y_neg)/(len(y_true1) + len(y_true2))
+
+    return bias_diff
+
 def build_dataset(dataset, instruction, infer_mode):
 
     for index, example in dataset.iterrows():
@@ -321,41 +347,48 @@ if __name__ == "__main__":
             print(prompts[random.randint(0, len(prompts)-1)]+"\n")
             print("******************************Sampled Prompt Ended****************************"+"\n")
 
-        if "gpt" not in args.model_name:
-            predictions = batched_generation(os.path.join("models", args.model_name), 
-                                            prompts,
-                                            max_new_token=args.max_new_token,
-                                            temperature=args.temperature,
-                                            top_p=args.top_p)
+        logit_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"
+        if not args.rewrite_logit and os.path.exists(logit_file):
+            with open(logit_file, "r", encoding="utf-8") as fin:
+                lines = [json.loads(line.strip()) for line in fin.readlines()]
+                predictions = [line["prediction"] for line in lines]
+                pred_scores = [line["pred_score"] for line in lines]
         else:
-            manager = multiprocessing.Manager()
-            counter = manager.Value("counter", 0)
-            pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
-
-            if args.process_num == 1:
-                predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                            for sample in prompts]
+            if "gpt" not in args.model_name:
+                predictions = batched_generation(os.path.join("models", args.model_name), 
+                                                prompts,
+                                                max_new_token=args.max_new_token,
+                                                temperature=args.temperature,
+                                                top_p=args.top_p)
             else:
-                pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                predictions = pool.map(pool_fn, prompts)
-                pool.close()
+                manager = multiprocessing.Manager()
+                counter = manager.Value("counter", 0)
+                pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
 
-        pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
+                if args.process_num == 1:
+                    predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
+                                for sample in prompts]
+                else:
+                    pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
+                    predictions = pool.map(pool_fn, prompts)
+                    pool.close()
 
-        if args.save_logit is not None:
-            with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
-                for p in zip(predictions, pred_scores):
-                    pred_line = {"prediction": p[0], "pred_score": p[1]}
-                    fout.write(json.dumps(pred_line)+"\n")
+            pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
+
+        with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
+            for p in zip(predictions, pred_scores):
+                pred_line = {"prediction": p[0], "pred_score": p[1]}
+                fout.write(json.dumps(pred_line)+"\n")
 
         win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
         los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
-        result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc}
+        bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
+        result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
 
         print(result_dicts)
 
     for data_type in args.data_type:
-        print("**********************************************")
+        print("*****************Results**********************")
         print(f"Model: {args.model_name}, Data: {data_type}, Infer: {args.infer_mode}")
         print(result_dicts[data_type])
         print("**********************************************")

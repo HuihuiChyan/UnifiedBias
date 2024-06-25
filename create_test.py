@@ -36,14 +36,20 @@ df["response_b"] = df["response_b"].apply(lambda x:str(x).encode('utf-8', 'repla
 # 我们选择了比较有代表性的四个模型作为本次评测的基础
 evaluator_models = ["gpt-4-1106-preview", "gpt-3.5-turbo-0613", "vicuna-13b", "llama-2-13b-chat"]
 # 和四个模型同属一个group的模型也应该考虑在内
-evaluator_group_models = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-0314', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-1106',
-                          'gpt-4-0125-preview', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-1106-preview',
-                          'vicuna-13b', 'vicuna-33b', 'vicuna-7b',
-                          'llama-2-13b-chat', 'llama-2-70b-chat', 'llama-2-7b-chat']
+evaluator_models_familiy = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-0314', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-1106',
+                            'gpt-4-0125-preview', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-1106-preview',
+                            'vicuna-13b', 'vicuna-33b', 'vicuna-7b',
+                            'llama-2-13b-chat', 'llama-2-70b-chat', 'llama-2-7b-chat']
+
+evaluator_groups = {}
+evaluator_groups["gpt-3.5-turbo-0613"] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-0314', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-1106']
+evaluator_groups["gpt-4-1106-preview"] = ['gpt-4-0125-preview', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-1106-preview']
+evaluator_groups["vicuna-13b"] = ['vicuna-13b', 'vicuna-33b', 'vicuna-7b']
+evaluator_groups["llama-2-13b-chat"] = ['llama-2-13b-chat', 'llama-2-70b-chat', 'llama-2-7b-chat']
 
 def balance_length(sub_df, average_and_concat=False):
-    verbo_win_df = sub_df[(sub_df["response_a"] > sub_df["response_b"]) & (sub_df["winner_model_a"]==1) | (sub_df["response_a"] < sub_df["response_b"]) & (sub_df["winner_model_b"]==1)]
-    verbo_los_df = sub_df[(sub_df["response_a"] > sub_df["response_b"]) & (sub_df["winner_model_b"]==1) | (sub_df["response_a"] < sub_df["response_b"]) & (sub_df["winner_model_a"]==1)]
+    verbo_win_df = sub_df[((sub_df["response_a"] > sub_df["response_b"]) & (sub_df["winner_model_a"]==1)) | ((sub_df["response_a"] < sub_df["response_b"]) & (sub_df["winner_model_b"]==1))]
+    verbo_los_df = sub_df[((sub_df["response_a"] > sub_df["response_b"]) & (sub_df["winner_model_b"]==1)) | ((sub_df["response_a"] < sub_df["response_b"]) & (sub_df["winner_model_a"]==1))]
     tie_df = sub_df[sub_df["winner_tie"]==1]
 
     if average_and_concat:
@@ -69,10 +75,12 @@ def reverse_position(sub_df):
 def create_self_bias_data(df, sample_num=500):
     self_bias = {}
     for model_name in evaluator_models:
-        self_df = df[(df["model_a"]==model_name) | (df["model_b"]==model_name)]
-        self_win_df = df[(df["model_a"]==model_name) & (df["winner_model_a"]==1) | (df["model_b"]==model_name) & (df["winner_model_b"]==1)]
-        self_los_df = df[(df["model_a"]==model_name) & (df["winner_model_b"]==1) | (df["model_b"]==model_name) & (df["winner_model_a"]==1)]
-        self_tie_df = df[((df["model_a"]==model_name) | (df["model_b"]==model_name)) & (df["winner_tie"]==1)]
+        self_df_cond_a = (df["model_a"]==model_name) & (~ df["model_b"].isin(evaluator_groups[model_name]))
+        self_df_cond_b = (df["model_b"]==model_name) & (~ df["model_a"].isin(evaluator_groups[model_name]))
+        self_df = df[self_df_cond_a | self_df_cond_b]
+        self_win_df = self_df[(self_df["model_a"]==model_name) & (self_df["winner_model_a"]==1) | (self_df["model_b"]==model_name) & (self_df["winner_model_b"]==1)]
+        self_los_df = self_df[(self_df["model_a"]==model_name) & (self_df["winner_model_b"]==1) | (self_df["model_b"]==model_name) & (self_df["winner_model_a"]==1)]
+        self_tie_df = self_df[self_df["winner_tie"]==1]
 
         # sanity check
         assert len(self_win_df) + len(self_los_df) + len(self_tie_df) == len(self_df)
@@ -147,6 +155,7 @@ def create_position_bias_data(df, sample_num=500):
 if __name__ == "__main__":
 
     random.seed(42)
+    np.random.seed(42)
 
     def compare_length(x):
         if len(x.response_a) > len(x.response_b):
@@ -161,7 +170,7 @@ if __name__ == "__main__":
     self_bias = create_self_bias_data(df)
 
     # 确保在verbo-bias和position-bias数据中，不包含evaluator模型及其同组模型相关的数据，从而去除self-bias的影响
-    df = df[(~df["model_a"].isin(evaluator_group_models)) & (~df["model_b"].isin(evaluator_group_models))]
+    df = df[(~df["model_a"].isin(evaluator_models_familiy)) & (~df["model_b"].isin(evaluator_models_familiy))]
 
     verbo_bias = create_verbo_bias_data(df)
     position_bias = create_position_bias_data(df)

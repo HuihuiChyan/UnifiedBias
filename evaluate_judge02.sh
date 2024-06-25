@@ -1,7 +1,7 @@
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=3
 python3 -u evaluate_judge.py \
-    --model-name "llama-2-13b-chat" \
+    --model-name "vicuna-13b" \
     --infer-mode "pairwise" \
-    --data-type "position" \
+    --data-type "position" "self" "verbosity" \
     --max-new-token 1024 \
     --save-logit
