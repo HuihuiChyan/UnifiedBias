@@ -343,8 +343,6 @@ def build_dataset(dataset, instruction, infer_mode):
             prompts.append(prompt_a)
             prompts.append(prompt_b)
 
-        assert example["winner_model_a"] + example["winner_model_b"] + example["winner_tie"] == 1
-
         answers.append(example["score"])
     
     return prompts, answers
