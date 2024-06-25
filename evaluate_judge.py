@@ -102,16 +102,16 @@ def do_one_request(url, headers, data):
     return res
 
 def request_gpt(prompt, model, temperature, max_new_tokens):
-    url = "https://www.qwopenai.com/v1/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer sk-15g5tdDeJ25iG5wX1e0790C8Bf69458dB827D9D04c66Db78",
-    }
-    # url = "https://api.ai-gaochao.cn/v1/chat/completions"
+    # url = "https://www.qwopenai.com/v1/chat/completions"
     # headers = {
     #     "Content-Type": "application/json",
-    #     "Authorization": "Bearer sk-agEcX3Su78Bu09c2F49978C6Ba424977B936C8710fAb42E0",
+    #     "Authorization": "Bearer sk-15g5tdDeJ25iG5wX1e0790C8Bf69458dB827D9D04c66Db78",
     # }
+    url = "https://api.ai-gaochao.cn/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk-agEcX3Su78Bu09c2F49978C6Ba424977B936C8710fAb42E0",
+    }
     max_tries = 5
     res = ''
     response = None
@@ -247,6 +247,11 @@ def parse_predictions(review, infer_mode):
             pos2 = review.find("]]", pos)
             assert pos != -1 and pos2 != -1
             return float(review[pos + len("Rating: [["):pos2].strip())
+        elif "Rating: [" in review:
+            pos = review.rfind("Rating: [")
+            pos2 = review.find("]", pos)
+            assert pos != -1 and pos2 != -1
+            return float(review[pos + len("Rating: ["):pos2].strip())
         elif "Rating: " in review:
             pos = review.rfind("Rating: ")
             score = re.search(r"[0-9\.]+", review[pos + len("Rating: ")])
@@ -309,8 +314,8 @@ def build_dataset(dataset, instruction, infer_mode):
     answers = []
     for index, example in dataset.iterrows():
         
-        # if index >= 50:
-        #     break
+        if index >= 100:
+            break
 
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
@@ -387,7 +392,7 @@ if __name__ == "__main__":
                 
                 len_prompts = len(prompts)
                 print(f"Totally {len_prompts} prompts.")
-                
+
                 if args.process_num == 1:
                     predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
                                    for sample in prompts]
