@@ -30,8 +30,14 @@ df["prompt"] = df["prompt"].apply(lambda x:str(x).encode('utf-8', 'replace').dec
 df["response_a"] = df["response_a"].apply(lambda x:str(x).encode('utf-8', 'replace').decode('utf-8'))
 df["response_b"] = df["response_b"].apply(lambda x:str(x).encode('utf-8', 'replace').decode('utf-8'))
 
-# all_models = sorted(list(set(df["model_a"].to_numpy().tolist())))
-# print(all_models) # 共计 64个模型
+all_models = sorted(list(set(df["model_a"].to_numpy().tolist())))
+print(all_models) # 共计 64个模型
+
+for model_name in all_models:
+    print(model_name)
+    print(len(df[(df["model_a"] == model_name) | (df["model_b"] == model_name)]))
+
+exit()
 
 # 我们选择了比较有代表性的四个模型作为本次评测的基础
 evaluator_models = ["gpt-4-1106-preview", "gpt-3.5-turbo-0613", "vicuna-13b", "llama-2-13b-chat"]
