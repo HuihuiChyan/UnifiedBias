@@ -148,8 +148,8 @@ def load_dataset(data_type, data_path = "./test_data"):
     dataset = []
     for index, line in enumerate(lines):
 
-        if index >= 100:
-            break
+        # if index >= 100:
+        #     break
 
         example = {}
         if line["input"].strip() == "":
