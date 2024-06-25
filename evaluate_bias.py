@@ -366,7 +366,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     result_dicts = {}
 
-    dataset = load_dataset(args.data_type, args.model_name)
+    dataset = load_dataset(args.data_type)
     
     instruction = build_prompt(args.model_name, args.infer_mode)
 
