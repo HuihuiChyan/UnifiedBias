@@ -124,7 +124,7 @@ if __name__ == "__main__":
         model_path = os.path.join("models", args.model_name)
         outputs = get_multi_answer(model_path, prompts, args.max_new_token)
 
-        predictions, prefix_lens, target_lens, output_ids = outputs["predictions"],\
+        predictions, prefix_lens, target_lens, output_ids = outputs["prediction"],\
                                                             outputs["prefix_lens"],\
                                                             outputs["target_lens"],\
                                                             outputs["output_ids"]
