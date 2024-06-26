@@ -69,8 +69,6 @@ def build_params():
     )
     return parser
 
-
-@torch.inference_mode()
 def batched_generation(
     model_path,
     prompts,
