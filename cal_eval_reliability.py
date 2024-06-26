@@ -59,6 +59,9 @@ def get_single_evaluation(
     # prefix_len: The length of the instruction part
     # target_len: The length of the response part
 
+    import pdb;pdb.set_trace()
+    output_ids_ori = torch.as_tensor(output_ids_ori)
+
     assert output_ids_ori.size()[0] == 1
     output_ids_ori = output_ids_ori.to(model.device)
 
