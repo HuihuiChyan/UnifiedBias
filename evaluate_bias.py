@@ -264,7 +264,7 @@ Please act as an impartial judge and evaluate the quality of the response provid
 [The Start of Assistant’s Answer]
 {answer}
 [The End of Assistant’s Answer] [/INST]"""
-    elif model_name == "Meta-Llama-3-70B":    
+    elif model_name == "Meta-Llama-3-70B-Instruct":    
         if infer_mode == "pairwise":
             prompt = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
