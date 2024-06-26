@@ -17,12 +17,12 @@ def get_multi_answer(
     top_p=1.0,
 ):
     print("Start load VLLM model!")
+    model = vllm.LLM(model=model_path, tensor_parallel_size=torch.cuda.device_count(), dtype="bfloat16", gpu_memory_utilization=0.9)
     tokenizer = model.get_tokenizer()
     if "Llama3" in model_path:
         stop_token_ids = [tokenizer.eos_token_id]
     else:
         stop_token_ids = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
-    model = vllm.LLM(model=model_path, tensor_parallel_size=torch.cuda.device_count(), dtype="bfloat16", gpu_memory_utilization=0.9)
     sampling_params = vllm.SamplingParams(
         temperature=temperature,
         max_tokens=max_new_token,
