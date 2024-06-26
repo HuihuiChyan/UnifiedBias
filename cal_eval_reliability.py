@@ -154,8 +154,8 @@ if __name__ == "__main__":
         evaluation = get_single_evaluation(
             model,
             torch.as_tensor([output_ids[i:i+2]]),
-            prefix_lens[i],
-            target_lens[i],
+            prefix_lens[i:i+2],
+            target_lens[i:i+2],
         )
         logit = evaluation["logit"]
         entropy = evaluation["entropy"]
