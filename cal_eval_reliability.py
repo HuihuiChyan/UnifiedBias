@@ -46,7 +46,7 @@ def get_multi_answer(
 
     output_ids = [ids[0]+ids[1] for ids in zip(prompt_token_ids, output_token_ids)]
 
-    return {"output_tokens": output_tokens, "prefix_lens": prefix_lens, "target_lens": target_lens, "output_ids": output_ids}
+    return {"predictions": output_tokens, "prefix_lens": prefix_lens, "target_lens": target_lens, "output_ids": output_ids}
 
 @torch.inference_mode()
 def get_single_evaluation(
