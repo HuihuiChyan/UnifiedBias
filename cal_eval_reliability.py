@@ -65,7 +65,7 @@ def get_single_evaluation(
     pad_token_id = 128001 # tokenizer.convert_tokens_to_ids("<|end_of_text|>")
     output_ids = torch.nn.utils.rnn.pad_sequence(output_ids, batch_first=True, padding_value=pad_token_id)
 
-    masked_pos = torch.arange(len(output_ids[0])).expand(len(prefix_len), len(output_ids[0])) < prefix_len.unsqueeze(1)
+    masked_pos = torch.arange(len(output_ids[0])).expand(len(prefix_len), len(output_ids[0])) < torch.as_tensor(prefix_len).unsqueeze(1)
 
     outputs = model(
         input_ids=output_ids.to(model.device),
