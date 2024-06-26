@@ -62,6 +62,8 @@ def get_single_evaluation(
     assert output_ids_ori.size()[0] == 1
     output_ids_ori = output_ids_ori.to(model.device)
 
+    import pdb;pdb.set_trace()
+
     input_ids = copy.deepcopy(output_ids_ori)
     output_ids = output_ids_ori.clone()
     output_ids[0][:prefix_len] = -100  # instruction masking
@@ -151,7 +153,7 @@ if __name__ == "__main__":
     for i in tqdm(range(len(predictions)), desc="Calculating reliability score"):
         evaluation = get_single_evaluation(
             model,
-            torch.as_tensor([output_ids[i]]),
+            torch.as_tensor([output_ids[i:i+2]]),
             prefix_lens[i],
             target_lens[i],
         )
