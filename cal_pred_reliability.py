@@ -51,28 +51,31 @@ def get_multi_answer(
 @torch.inference_mode()
 def get_single_evaluation(
     model,
-    output_ids_ori,
+    output_ids,
     prefix_len,
     target_len,
 ):
-    # output_ids_ori: The predicted ids consist of both instruction and response, shape is [1, sequence_len]
+    # output_ids_ori: The predicted ids consist of both instruction and response, shape is [batch_size, sequence_len]
     # prefix_len: The length of the instruction part
     # target_len: The length of the response part
 
-    assert output_ids_ori.size()[0] == 1
-    output_ids_ori = output_ids_ori.to(model.device)
+    # assert output_ids_ori.size()[0] == 1
+    output_ids = [torch.as_tensor(ot) for ot in output_ids]
 
-    input_ids = copy.deepcopy(output_ids_ori)
-    output_ids = output_ids_ori.clone()
-    output_ids[0][:prefix_len] = -100  # instruction masking
+    pad_token_id = tokenizer.convert_tokens_to_ids("<|end_of_text|>")
+    output_ids = torch.nn.utils.rnn.pad_sequence(output_ids, batch_first=True, padding_value=pad_token_id)
+
+    masked_pos = torch.arange(len(output_ids[0])).expand(len(prefix_len), len(output_ids[0])) < prefix_len.unsqueeze(1)
+
     outputs = model(
-        input_ids=torch.as_tensor(input_ids),
-        labels=output_ids,
+        input_ids=output_ids.to(model.device),
+        # labels=output_ids,
         output_hidden_states=True,
         output_attentions=True,
     )
     # the predict ids should be shifted left
-    shifted_input_ids = torch.roll(input_ids, shifts=-1)
+    shifted_output_ids = torch.roll(output_ids, shifts=-1)
+    import pdb;pdb.set_trace()
     logprobs = torch.nn.functional.log_softmax(outputs["logits"], dim=-1)
 
     logprobs_variance = torch.var(logprobs, dim=-1)
