@@ -116,7 +116,7 @@ if __name__ == "__main__":
     torch.cuda.empty_cache()
 
     # 初始化结果字典
-    results = {"Entropy": [], "Variance": []}
+    results = {"Entropy": [], "Variance": [], "Logit"}
 
     model = AutoModelForCausalLM.from_pretrained(model_path).half().cuda()
     model.eval()
