@@ -61,7 +61,7 @@ def get_single_evaluation(
 
     # assert output_ids.size()[0] == 1
     output_ids = [torch.as_tensor(oi) for oi in output_ids]
-    masked_pos = [(torch.arange(len(output_ids[i])) < prefix_len[i]).long() for i in len(output_ids)]
+    masked_pos = [(torch.arange(len(output_ids[i])) < prefix_len[i]).long() for i in range(len(output_ids))]
 
     import pdb;pdb.set_trace()
 
@@ -78,6 +78,8 @@ def get_single_evaluation(
     # the predict ids should be shifted left
     shifted_output_ids = torch.roll(output_ids, shifts=-1)
     logprobs = torch.nn.functional.log_softmax(outputs["logits"], dim=-1)
+
+    import pdb;pdb.set_trace()
 
     logprobs_variance = torch.var(logprobs, dim=-1)
     logprobs_variance[output_ids == -100] = 0  # instruction masking
