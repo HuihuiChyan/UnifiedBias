@@ -7,7 +7,7 @@ import gc
 import json
 import vllm
 import copy
-from evaluate_bias import load_dataset, build_dataset, build_params, build_prompt
+from evaluate_bias import load_dataset, build_dataset, build_params, build_prompt, parse_predictions
 
 
 @torch.inference_mode()
