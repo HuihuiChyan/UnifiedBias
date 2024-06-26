@@ -61,13 +61,14 @@ def get_single_evaluation(
 
     # assert output_ids.size()[0] == 1
     output_ids = [torch.as_tensor(oi) for oi in output_ids]
-    masked_pos = [(torch.arange(len(output_ids[i])) < prefix_len[i]).long() for i in range(len(output_ids))]
-
-    import pdb;pdb.set_trace()
+    masked_pos = [(torch.arange(len(output_ids[i])) >= prefix_len[i]).long() for i in range(len(output_ids))]
 
     pad_token_id = 128001 # tokenizer.convert_tokens_to_ids("<|end_of_text|>")
     output_ids = torch.nn.utils.rnn.pad_sequence(output_ids, batch_first=True, padding_value=pad_token_id)
     masked_pos = torch.nn.utils.rnn.pad_sequence(masked_pos, batch_first=True, padding_value=0)
+
+    output_ids = output_ids.to(model.device)
+    masked_pos = masked_pos.to(model.device)
 
     outputs = model(
         input_ids=output_ids.to(model.device),
@@ -78,6 +79,9 @@ def get_single_evaluation(
     # the predict ids should be shifted left
     shifted_output_ids = torch.roll(output_ids, shifts=-1)
     logprobs = torch.nn.functional.log_softmax(outputs["logits"], dim=-1)
+
+    evaluation_logit = torch.gather(logprobs, dim=-1, index=shifted_output_ids.unsqueeze(-1)).squeeze(-1).sum(-1)
+    evaluation_logit = [evaluation_logit[i] / target_len[i] for i in range(len(evaluation_logit))]
 
     import pdb;pdb.set_trace()
 
@@ -91,9 +95,6 @@ def get_single_evaluation(
     logprobs_entropy = torch.mean(logprobs * outputs["logits"], dim=-1)
     # averaged on target length
     evaluation_ent = logprobs_entropy.sum(-1)[0] / target_len
-
-    evaluation_logit = torch.gather(logprobs, dim=-1, index=shifted_input_ids.unsqueeze(-1)).squeeze(-1)
-    evaluation_logit = evaluation_logit.sum(-1)[0] / target_len
 
     return {"logit": evaluation_logit, "entropy": evaluation_ent, "variance": evaluation_var}
 
