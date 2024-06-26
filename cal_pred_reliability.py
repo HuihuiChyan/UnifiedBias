@@ -9,8 +9,6 @@ import vllm
 import copy
 from evaluate_bias import load_dataset, build_dataset, build_params
 
-
-@torch.inference_mode()
 def get_multi_answer(
     model_path,
     prompts,
@@ -19,11 +17,16 @@ def get_multi_answer(
     top_p=1.0,
 ):
     print("Start load VLLM model!")
+    if "Llama3" in model_path:
+        stop_token_ids = [tokenizer.eos_token_id]
+    else:
+        stop_token_ids = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
     model = vllm.LLM(model=model_path, tensor_parallel_size=torch.cuda.device_count(), dtype="bfloat16", gpu_memory_utilization=0.8)
     sampling_params = vllm.SamplingParams(
         temperature=temperature,
         max_tokens=max_new_token,
         top_p=top_p,
+        stop_token_ids=stop_token_ids,
     )
     print("VLLM model loaded!")
 
