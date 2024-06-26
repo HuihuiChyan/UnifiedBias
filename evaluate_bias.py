@@ -80,7 +80,7 @@ def batched_generation(
 ):
     print("Start load VLLM model!")
     import vllm
-    model = vllm.LLM(model=model_path, tensor_parallel_size=1, dtype="bfloat16", gpu_memory_utilization=0.8)
+    model = vllm.LLM(model=model_path, tensor_parallel_size=torch.cuda.device_count(), dtype="bfloat16", gpu_memory_utilization=0.9)
     sampling_params = vllm.SamplingParams(
         temperature=temperature,
         max_tokens=max_new_token,
