@@ -148,7 +148,7 @@ if __name__ == "__main__":
             variance, torch.Tensor) else variance)
 
     # 将所有结果写入 JSON 文件
-    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-relia-eval.json"
+    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-eval-relia.json"
     with open(relia_file, "w") as file_out:
         json.dump(results, file_out, indent=4)
 

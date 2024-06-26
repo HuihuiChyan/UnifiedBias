@@ -1,6 +1,6 @@
 export CUDA_VISIBLE_DEVICES=4
 
-python3 -u cal_eval_reliability.py \
+python3 -u cal_pred_reliability.py \
     --model-name "llama-2-13b-chat" \
     --infer-mode "pairwise" \
     --data-type "judgelm" \
