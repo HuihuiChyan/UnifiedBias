@@ -111,6 +111,7 @@ if __name__ == "__main__":
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
     eval_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"
+    model_path = os.path.join("models", args.model_name)
     if os.path.exists(eval_file):
         with open(eval_file, "r", encoding="utf-8") as fin:
             lines = [json.loads(line) for line in fin.readlines()]
@@ -121,7 +122,6 @@ if __name__ == "__main__":
             output_ids = [line["output_ids"] for line in lines]
 
     else:
-        model_path = os.path.join("models", args.model_name)
         outputs = get_multi_answer(model_path, prompts, args.max_new_token)
 
         predictions, prefix_lens, target_lens, output_ids = outputs["prediction"],\
