@@ -25,7 +25,7 @@ def build_params():
         "--data-type",
         type=str,\
         nargs='+',
-        choices=("self", "position", "verbosity", "pandalm"),
+        choices=("self", "position", "verbosity", "pandalm", "judgelm"),
         default=None,
     )
     parser.add_argument(
