@@ -145,7 +145,7 @@ if __name__ == "__main__":
     # 初始化结果字典
     results = {"Entropy": [], "Variance": [], "Logit": []}
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto")
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto",).half()
     model.eval()
 
     for i in tqdm(range(len(predictions)), desc="Calculating reliability score"):
