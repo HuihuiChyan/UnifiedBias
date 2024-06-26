@@ -153,7 +153,7 @@ if __name__ == "__main__":
     for i in tqdm(range(len(predictions)), desc="Calculating reliability score"):
         evaluation = get_single_evaluation(
             model,
-            torch.as_tensor([output_ids[i:i+2]]),
+            output_ids[i:i+2],
             prefix_lens[i:i+2],
             target_lens[i:i+2],
         )
