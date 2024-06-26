@@ -110,6 +110,12 @@ if __name__ == "__main__":
     model_path = os.path.join("models", args.model_name)
     predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
 
+    pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
+    with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
+        for p in zip(predictions, pred_scores):
+            pred_line = {"prediction": p[0], "pred_score": p[1]}
+            fout.write(json.dumps(pred_line)+"\n")
+
     print("*******************************Sampled Prediction*****************************")
     print(predictions[sample_idx]+"\n")
     print("****************************Sampled Prediction Ended**************************"+"\n")
@@ -142,7 +148,7 @@ if __name__ == "__main__":
             variance, torch.Tensor) else variance)
 
     # 将所有结果写入 JSON 文件
-    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-relia.json"
+    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-relia-eval.json"
     with open(relia_file, "w") as file_out:
         json.dump(results, file_out, indent=4)
 
