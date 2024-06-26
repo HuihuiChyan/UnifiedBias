@@ -9,8 +9,6 @@ import vllm
 import copy
 from evaluate_bias import load_dataset, build_dataset, build_params, build_prompt, parse_predictions
 
-
-@torch.inference_mode()
 def get_multi_answer(
     model_path,
     prompts,
