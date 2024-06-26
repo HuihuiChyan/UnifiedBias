@@ -88,6 +88,29 @@ def get_single_evaluation(
 
     return {"logit": evaluation_logit, "entropy": evaluation_ent, "variance": evaluation_var}
 
+def build_prompt(model_name, infer_mode):
+    if "gpt" in model_name:
+        instruction = "{prompt}"
+
+    elif model_name == "vicuna-13b":
+        instruction = """A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
+
+USER: {prompt}
+ASSISTANT:"""
+
+    elif model_name == "llama2-13b-chat":
+        instruction = "[INST]\n{prompt} [/INST]"
+
+    elif model_name == "Meta-Llama-3-70B":    
+        instruction = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a helpful AI assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+
+    return instruction
+
+
 if __name__ == "__main__":
     random.seed(42)
     parser = build_params()
@@ -96,19 +119,25 @@ if __name__ == "__main__":
     data_type = args.data_type[0]
 
     dataset = load_dataset(data_type)
-    
-    instruction = "[INST]\n{prompt} [/INST]"
+
+    instruction = build_prompt(args.model_name, args.infer_mode)
 
     prompts = []
     for example in dataset:
         prompts.append(instruction.format(prompt=example["prompt"]))
 
+    sample_idx = random.randint(0, len(prompts)-1)
+
     print("********************************Sampled Prompt********************************")
-    print(prompts[random.randint(0, len(prompts)-1)]+"\n")
+    print(prompts[sample_idx]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
     model_path = os.path.join("models", args.model_name)
     predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
+
+    print("*******************************Sampled Prediction*****************************")
+    print(predictions[sample_idx]+"\n")
+    print("****************************Sampled Prediction Ended**************************"+"\n")
 
     gc.collect()
     torch.cuda.empty_cache()
