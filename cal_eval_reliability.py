@@ -46,7 +46,7 @@ def get_multi_answer(
 
     output_ids = [ids[0]+ids[1] for ids in zip(prompt_token_ids, output_token_ids)]
 
-    return output_tokens, prefix_lens, target_lens, output_ids
+    return {"output_tokens": output_tokens, "prefix_lens": prefix_lens, "target_lens": target_lens, "output_ids": output_ids}
 
 @torch.inference_mode()
 def get_single_evaluation(
@@ -110,14 +110,30 @@ if __name__ == "__main__":
     print(prompts[sample_idx]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
-    model_path = os.path.join("models", args.model_name)
-    predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
+    eval_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"
+    if os.path.exists(eval_file):
+        with open(eval_file, "r", encoding="utf-8") as fin:
+            lines = [json.loads(line) for line in fin.readlines()]
+            predictions = [line["prediction"] for line in predictions]
+            pred_scores = [line["pred_score"] for line in pred_scores]
+            prefix_lens = [line["prefix_len"] for line in prefix_lens]
+            target_lens = [line["target_len"] for line in target_lens]
+            output_ids = [line["output_ids"] for line in output_ids]
 
-    pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
-    with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:
-        for p in zip(predictions, pred_scores):
-            pred_line = {"prediction": p[0], "pred_score": p[1]}
-            fout.write(json.dumps(pred_line)+"\n")
+    else:
+        model_path = os.path.join("models", args.model_name)
+        outputs = get_multi_answer(model_path, prompts, args.max_new_token)
+
+        predictions, prefix_lens, target_lens, output_ids = outputs["predictions"],\
+                                                            outputs["prefix_lens"],\
+                                                            outputs["target_lens"],\
+                                                            outputs["output_ids"]
+
+        pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
+        with open(eval_file, "w", encoding="utf-8") as fout:
+            for p in zip(predictions, pred_scores, prefix_lens, target_lens, output_ids):
+                pred_line = {"prediction": p[0], "pred_score": p[1], "prefix_len": p[2], "target_len": p[3], "output_ids": p[4]}
+                fout.write(json.dumps(pred_line)+"\n")
 
     print("*******************************Sampled Prediction*****************************")
     print(predictions[sample_idx]+"\n")
