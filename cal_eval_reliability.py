@@ -97,11 +97,9 @@ if __name__ == "__main__":
 
     dataset = load_dataset(data_type)
     
-    instruction = "[INST]\n{prompt} [/INST]"
+    instruction = build_prompt(args.model_name, args.infer_mode)
 
-    prompts = []
-    for example in dataset:
-        prompts.append(instruction.format(prompt=example["prompt"]))
+    prompts, answers = build_dataset(dataset, instruction, args.infer_mode)
 
     print("********************************Sampled Prompt********************************")
     print(prompts[random.randint(0, len(prompts)-1)]+"\n")
@@ -109,6 +107,10 @@ if __name__ == "__main__":
 
     model_path = os.path.join("models", args.model_name)
     predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
+
+    print("*******************************Sampled Prediction*****************************")
+    print(prompts[random.randint(0, len(prompts)-1)]+"\n")
+    print("****************************Sampled Prediction Ended**************************"+"\n")
 
     gc.collect()
     torch.cuda.empty_cache()
