@@ -72,8 +72,8 @@ def main():
     answers = [example["score"] for example in dataset]
 
     relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-{args.relia_type}-relia.json"
-    relia_scores = load_results(relia_file)
-    relia_scores = compute_combined_score(relia_scores["Entropy"], relia_scores["Variance"])
+    relia_scores = load_results(relia_file)["Entropy"]
+    # relia_scores = compute_combined_score(relia_scores["Entropy"], relia_scores["Variance"])
 
     logit_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"
 
@@ -85,11 +85,11 @@ def main():
 
     accuracy_rate = compute_accuracy_rate(relia_scores, answers, pred_scores, len(relia_scores), data_type)
 
-    bucket_rate = compute_bucketing_rate(relia_scores, answers, pred_scores, len(relia_scores), data_type)
+    # bucket_rate = compute_bucketing_rate(relia_scores, answers, pred_scores, len(relia_scores), data_type)
 
     # 随机选取等量的索引作为一个随机基线比较
     random_indices = np.random.choice(
-        len(answers), len(relia_scores)//2, replace=False)
+        len(answers), len(answers)//2, replace=False)
 
     random_accuracy_rate = calculate_metrics(
         [answers[i] for i in random_indices], [pred_scores[i] for i in random_indices], data_type)
