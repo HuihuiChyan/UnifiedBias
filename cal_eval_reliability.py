@@ -62,7 +62,7 @@ def get_single_evaluation(
     # assert output_ids_ori.size()[0] == 1
     output_ids = [torch.as_tensor(ot) for ot in output_ids]
 
-    pad_token_id = tokenizer.convert_tokens_to_ids("<|end_of_text|>")
+    pad_token_id = 128001 # tokenizer.convert_tokens_to_ids("<|end_of_text|>")
     output_ids = torch.nn.utils.rnn.pad_sequence(output_ids, batch_first=True, padding_value=pad_token_id)
 
     masked_pos = torch.arange(len(output_ids[0])).expand(len(prefix_len), len(output_ids[0])) < prefix_len.unsqueeze(1)
