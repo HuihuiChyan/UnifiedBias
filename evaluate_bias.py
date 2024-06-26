@@ -163,7 +163,7 @@ def load_dataset(data_type, data_path = "./test_data"):
                 new_dataset.append(example)
         
         dataset = new_dataset
-        dataset = random.choice(dataset, k=1000)
+        dataset = random.sample(dataset, k=100)
 
     elif data_type == "pandalm":
         with open(os.path.join(data_path, "pandalm/testset-v1.json"), "r") as fin:
