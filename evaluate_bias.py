@@ -154,6 +154,9 @@ def load_dataset(data_type, data_path = "./test_data"):
 
         new_dataset = []
         for example, example_score in zip(dataset, dataset_score):
+            example["prompt"] = example["question_body"]
+            example["response_a"] = example["answer1_body"]
+            example["response_b"] = example["answer2_body"]
             example["score"] = example_score["score"]
 
             if example["score"] != [-1, -1]:
