@@ -17,6 +17,7 @@ def get_multi_answer(
     top_p=1.0,
 ):
     print("Start load VLLM model!")
+    tokenizer = model.get_tokenizer()
     if "Llama3" in model_path:
         stop_token_ids = [tokenizer.eos_token_id]
     else:
@@ -30,7 +31,6 @@ def get_multi_answer(
     )
     print("VLLM model loaded!")
 
-    tokenizer = model.get_tokenizer()
     MAX_LEN = model.llm_engine.model_config.max_model_len - 512
     prompt_ids = [tokenizer.encode(prompt)[-MAX_LEN:] for prompt in prompts]
 
