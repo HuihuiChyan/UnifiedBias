@@ -1,7 +1,7 @@
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=1,2,3,4
 
 python3 -u cal_eval_reliability.py \
-    --model-name "vicuna-13b" \
+    --model-name "Meta-Llama-3-70B-Instruct" \
     --infer-mode "pairwise" \
     --data-type "pandalm" \
     --max-new-token 512
