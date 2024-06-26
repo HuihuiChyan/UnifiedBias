@@ -114,11 +114,11 @@ if __name__ == "__main__":
     if os.path.exists(eval_file):
         with open(eval_file, "r", encoding="utf-8") as fin:
             lines = [json.loads(line) for line in fin.readlines()]
-            predictions = [line["prediction"] for line in predictions]
-            pred_scores = [line["pred_score"] for line in pred_scores]
-            prefix_lens = [line["prefix_len"] for line in prefix_lens]
-            target_lens = [line["target_len"] for line in target_lens]
-            output_ids = [line["output_ids"] for line in output_ids]
+            predictions = [line["prediction"] for line in lines]
+            pred_scores = [line["pred_score"] for line in lines]
+            prefix_lens = [line["prefix_len"] for line in lines]
+            target_lens = [line["target_len"] for line in lines]
+            output_ids = [line["output_ids"] for line in lines]
 
     else:
         model_path = os.path.join("models", args.model_name)
