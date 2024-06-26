@@ -142,34 +142,54 @@ def gpt_scoring(prompt, model, temperature, max_new_tokens):
     return prediction
 
 def load_dataset(data_type, data_path = "./test_data"):
-    with open(os.path.join(data_path, "pandalm/testset-v1.json"), "r") as fin:
-        lines = json.load(fin)
 
-    dataset = []
-    for index, line in enumerate(lines):
+    if data_type == "judgelm":
+        with open(os.path.join(data_path, "judgelm/judgelm_val_5k.jsonl"), "r") as fin:
+            lines = [line.strip() for line in fin.readlines()]
+            dataset = [json.loads(line) for line in lines]
 
-        # if index >= 100:
-        #     break
+        with open(os.path.join(data_path, "judgelm/judgelm_val_5k_gpt4.jsonl"), "r") as fin:
+            lines = [line.strip() for line in fin.readlines()]
+            dataset_score = [json.loads(line) for line in lines]
 
-        example = {}
-        if line["input"].strip() == "":
-            example["prompt"] = line["instruction"]
-        else:
-            example["prompt"] = line["input"] + \
-                "\n" + line["instruction"]
-        example["response_a"] = line["response1"]
-        example["response_b"] = line["response2"]
-        if line["annotator1"] == line["annotator2"] or line["annotator1"] == line["annotator2"]:
-            example["score"] = line["annotator1"]
-        elif line["annotator2"] == line["annotator3"]:
-            example["score"] = line["annotator2"]
-        else:
-            example["score"] = random.choice(
-                [line["annotator1"], line["annotator2"], line["annotator3"]])
-        # unify the score to judgelm format
-        score_mapping = {"0": [1, 1], "1": [1, 0], "2": [0, 1]}
-        example["score"] = score_mapping[str(example["score"])]
-        dataset.append(example)
+        new_dataset = []
+        for example, example_score in zip(dataset, dataset_score):
+            example["score"] = example_score["score"]
+
+            if example["score"] != [-1, -1]:
+                new_dataset.append(example)
+        
+        dataset = new_dataset
+
+    elif data_type == "pandalm":
+        with open(os.path.join(data_path, "pandalm/testset-v1.json"), "r") as fin:
+            lines = json.load(fin)
+
+        dataset = []
+        for index, line in enumerate(lines):
+
+            # if index >= 100:
+            #     break
+
+            example = {}
+            if line["input"].strip() == "":
+                example["prompt"] = line["instruction"]
+            else:
+                example["prompt"] = line["input"] + \
+                    "\n" + line["instruction"]
+            example["response_a"] = line["response1"]
+            example["response_b"] = line["response2"]
+            if line["annotator1"] == line["annotator2"] or line["annotator1"] == line["annotator2"]:
+                example["score"] = line["annotator1"]
+            elif line["annotator2"] == line["annotator3"]:
+                example["score"] = line["annotator2"]
+            else:
+                example["score"] = random.choice(
+                    [line["annotator1"], line["annotator2"], line["annotator3"]])
+            # unify the score to judgelm format
+            score_mapping = {"0": [1, 1], "1": [1, 0], "2": [0, 1]}
+            example["score"] = score_mapping[str(example["score"])]
+            dataset.append(example)
 
     return dataset
 

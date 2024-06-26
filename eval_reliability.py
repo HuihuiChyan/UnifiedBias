@@ -71,7 +71,7 @@ def main():
     answers = [example["score"] for example in dataset]
 
     relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-relia.json"
-    relia_scores = load_results(relia_file)["Entropy"]
+    relia_scores = load_results(relia_file)["Logit"]
     # relia_scores = compute_combined_score(relia_scores["Entropy"], relia_scores["Variance"])
 
     logit_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl"

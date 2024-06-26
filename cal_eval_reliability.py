@@ -101,15 +101,17 @@ if __name__ == "__main__":
 
     prompts, answers = build_dataset(dataset, instruction, args.infer_mode)
 
+    sample_idx = random.randint(0, len(prompts)-1)
+
     print("********************************Sampled Prompt********************************")
-    print(prompts[random.randint(0, len(prompts)-1)]+"\n")
+    print(prompts[sample_idx]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
     model_path = os.path.join("models", args.model_name)
     predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
 
     print("*******************************Sampled Prediction*****************************")
-    print(prompts[random.randint(0, len(prompts)-1)]+"\n")
+    print(predictions[sample_idx]+"\n")
     print("****************************Sampled Prediction Ended**************************"+"\n")
 
     gc.collect()
@@ -132,7 +134,7 @@ if __name__ == "__main__":
         entropy = evaluation["entropy"]
         variance = evaluation["variance"]
         # 将结果添加到字典中
-        results["Logit"].append(entropy.item() if isinstance(
+        results["Logit"].append(logit.item() if isinstance(
             entropy, torch.Tensor) else entropy)
         results["Entropy"].append(entropy.item() if isinstance(
             entropy, torch.Tensor) else entropy)
