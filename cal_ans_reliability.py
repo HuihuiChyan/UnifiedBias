@@ -12,7 +12,6 @@ from evaluate_judge import load_dataset, build_params
 def batched_evaluation(
     model_path,
     prompts,
-    max_new_token=16,
     temperature=0.0,
     top_p=1.0,
 ):
@@ -81,19 +80,13 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     prompts, prefix_lens = build_dataset(dataset["los"], tokenizer)
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto").half()
-    model.eval()
-
-    batch_size = 8
-    model_path = os.path.join("models", "mixtral-8x7b-instruct-v0.1")
     results = batched_evaluation(
         model_path,
         prompts,
-        max_new_token=16,
         temperature=0.0,
         top_p=1.0,
     )
-    
+
     # 将所有结果写入 JSON 文件
     relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-pred-relia.json"
     with open(relia_file, "w") as file_out:
