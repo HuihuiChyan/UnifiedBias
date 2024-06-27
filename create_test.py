@@ -45,7 +45,7 @@ evaluator_models = ["gpt-4-1106-preview", "gpt-3.5-turbo-0613", "mixtral-8x7b-in
 evaluator_models_familiy = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-0314', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-1106',
                             'gpt-4-0125-preview', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-1106-preview',
                             'mixtral-8x7b-instruct-v0.1', 'mistral-7b-instruct', 'mistral-7b-instruct-v0.2', 'mistral-medium',
-                            'llama-2-13b-chat', 'llama-2-70b-chat', 'llama-2-7b-chat']
+                            'llama-2-70b-chat', 'llama-2-13b-chat', 'llama-2-7b-chat']
 
 evaluator_groups = {}
 evaluator_groups["gpt-3.5-turbo-0613"] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-0314', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-1106']
