@@ -1,4 +1,6 @@
+import json
 from collections import defaultdict
+
 data_type = "self"
 model_name = "llama-2-70b-chat"
 infer_mode = "pairwise"
