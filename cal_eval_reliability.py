@@ -59,7 +59,6 @@ def get_single_evaluation(
     # prefix_len: The length of the instruction part
     # target_len: The length of the response part
 
-    # assert output_ids.size()[0] == 1
     output_ids = [torch.as_tensor(oi) for oi in output_ids]
     masked_pos = [(torch.arange(len(output_ids[i])) >= prefix_len[i]).long() for i in range(len(output_ids))]
 
@@ -131,7 +130,7 @@ if __name__ == "__main__":
     else:
         outputs = get_multi_answer(model_path, prompts, args.max_new_token)
 
-        predictions, prefix_lens, target_lens, output_ids = outputs["prediction"],\
+        predictions, prefix_lens, target_lens, output_ids = outputs["predictions"],\
                                                             outputs["prefix_lens"],\
                                                             outputs["target_lens"],\
                                                             outputs["output_ids"]
