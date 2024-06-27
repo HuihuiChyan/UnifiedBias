@@ -94,8 +94,6 @@ def get_single_evaluation(
     # averaged on target length
     evaluation_ent = [logprobs_entropy.sum(-1)[i] / target_len[i] for i in range(len(logprobs_variance))]
 
-    import pdb;pdb.set_trace()
-
     return {"logit": evaluation_logit, "entropy": evaluation_ent, "variance": evaluation_var}
 
 if __name__ == "__main__":
@@ -165,16 +163,10 @@ if __name__ == "__main__":
             prefix_lens[i:i+batch_size],
             target_lens[i:i+batch_size],
         )
-        logit = evaluation["logit"]
-        entropy = evaluation["entropy"]
-        variance = evaluation["variance"]
         # 将结果添加到字典中
-        results["logit"].append(logit.item() if isinstance(
-            entropy, torch.Tensor) else entropy)
-        results["entropy"].append(entropy.item() if isinstance(
-            entropy, torch.Tensor) else entropy)
-        results["variance"].append(variance.item() if isinstance(
-            variance, torch.Tensor) else variance)
+        results["logit"].extend(evaluation["logit"])
+        results["entropy"].extend(evaluation["entropy"])
+        results["variance"].extend(evaluation["variance"])
 
     # 将所有结果写入 JSON 文件
     relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-eval-relia.json"
