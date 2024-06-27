@@ -83,12 +83,14 @@ def batched_generation(
         temperature=temperature,
         max_tokens=max_new_token,
         top_p=top_p,
-        prompt_logprobs=1,
+        prompt_logprobs=0,
     )
     print("VLLM model loaded!")
-    import pdb;pdb.set_trace()
 
     pred_list = model.generate(prompts, sampling_params)
+
+    [list(lp.items())[0][0] for lp in pred_list[0].prompt_logprobs[1:]]
+    import pdb;pdb.set_trace()
     pred_list = [it.outputs[0].text for it in pred_list]
 
     return pred_list
