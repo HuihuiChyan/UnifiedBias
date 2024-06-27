@@ -83,9 +83,9 @@ def build_dataset(dataset, tokenizer):
     print(prompts_b[sample_idx]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
-    token_ids_a = tokenizer(prompts_a)["input_ids"]
-    token_ids_b = tokenizer(prompts_b)["input_ids"]
-    token_ids_prefix = tokenizer(prompts_prefix)["input_ids"]
+    token_ids_a = tokenizer(prompts_a, max_length=2048, truncation=True)["input_ids"]
+    token_ids_b = tokenizer(prompts_b, max_length=2048, truncation=True)["input_ids"]
+    token_ids_prefix = tokenizer(prompts_prefix, max_length=2048, truncation=True)["input_ids"]
 
     output_ids = token_ids_a + token_ids_b
     prefix_lens = [len(t) for t in token_ids_prefix]
