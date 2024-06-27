@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     data_type = args.data_type[0]
 
-    dataset = load_dataset(data_type)
+    dataset = load_dataset(data_type, args.model_name)
 
     # 初始化结果字典
     results = {"logit": [], "entropy": [], "variance": []}
