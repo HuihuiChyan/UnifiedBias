@@ -38,16 +38,19 @@ def build_eval_dataset(dataset, tokenizer):
     instruction_prefix = "[INST]\n{prompt}[/INST]"
     instruction = "[INST]\n{prompt}[/INST]{answer}"
 
-    prompts_prefix = []
-    prompts_a = []
-    prompts_b = []
+    prompts = []
     answers = []
+    prefix_lens = []
     for index, example in dataset.iterrows():
         # if index >= 50:
         #     break
-        prompts_prefix.append(instruction_prefix.format(prompt=example["prompt"]))
-        prompts_a.append(instruction.format(prompt=example["prompt"], answer=example["response_a"]))
-        prompts_b.append(instruction.format(prompt=example["prompt"], answer=example["response_b"]))
+        prompts.append(instruction.format(prompt=example["prompt"], answer=example["response_a"]))
+        prompts.append(instruction.format(prompt=example["prompt"], answer=example["response_b"]))
+
+        prompts_prefix = instruction_prefix.format(prompt=example["prompt"])
+        token_ids_prefix = tokenizer(prompts_prefix)["input_ids"]
+        prefix_lens.append(len(prompts_prefix))
+        prefix_lens.append(len(prompts_prefix))
 
         if example["winner_model_a"] == 1:
             answers.append([1, 0])
@@ -56,20 +59,12 @@ def build_eval_dataset(dataset, tokenizer):
         else:
             answers.append([1, 1])
 
-    sample_idx = random.randint(0, len(prompts_prefix)-1)
+    sample_idx = random.randint(0, len(prompts)-2)
 
     print("********************************Sampled Prompt********************************")
-    print(prompts_prefix[sample_idx]+"\n")
-    print(prompts_a[sample_idx]+"\n")
-    print(prompts_b[sample_idx]+"\n")
+    print(prompts[sample_idx]+"\n")
+    print(prompts[sample_idx+1]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
-
-    token_ids_prefix = tokenizer(prompts_prefix)["input_ids"]
-
-    prefix_lens = [len(t) for t in token_ids_prefix]
-
-    prefix_lens = prefix_lens * 2
-    prompts = prompts_a + prompts_b
 
     return prompts, prefix_lens, answers
 
