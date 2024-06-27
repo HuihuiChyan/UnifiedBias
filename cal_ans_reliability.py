@@ -70,7 +70,7 @@ def build_dataset(dataset, tokenizer):
     prompts_prefix = []
     prompts_a = []
     prompts_b = []
-    for example in dataset:
+    for index, example in dataset.iterrows():
         prompts_prefix.append(instruction_prefix.format(prompt=example["prompt"]))
         prompts_a.append(instruction.format(prompt=example["prompt"], response=example["response_a"]))
         prompts_b.append(instruction.format(prompt=example["prompt"], response=example["response_b"]))
