@@ -7,7 +7,7 @@ import gc
 import json
 import vllm
 import copy
-from evaluate_judge import load_dataset, build_params
+from evaluate_judge import load_dataset, build_params, calculate_metrics
 
 def batched_evaluation(
     model_path,
