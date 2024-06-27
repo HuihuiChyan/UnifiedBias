@@ -99,8 +99,6 @@ if __name__ == "__main__":
 
     dataset = load_dataset(data_type, args.model_name)
 
-    
-
     # 初始化结果字典
     results = {"logit": [], "entropy": [], "variance": []}
 
@@ -109,7 +107,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model.eval()
 
-    output_ids, prefix_lens, target_lens = build_dataset(dataset["neg"], tokenizer)
+    output_ids, prefix_lens, target_lens = build_dataset(dataset["los"], tokenizer)
 
     batch_size = 4
     max_length = max([l[0]+l[1] for l in zip(prefix_lens, target_lens)])
