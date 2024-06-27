@@ -29,7 +29,7 @@ def batched_evaluation(
 
     prompt_logprobs = [[list(lp.items())[0][1] for lp in pl.prompt_logprobs[1:]] for pl in pred_list]
 
-    prompt_logprobs = [sum(pl) for pl in prompt_logprobs]
+    prompt_logprobs = [sum(pl)/len(pl) for pl in prompt_logprobs]
 
     return prompt_logprobs
 
