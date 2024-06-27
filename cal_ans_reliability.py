@@ -33,7 +33,7 @@ def batched_evaluation(
 
     return prompt_logprobs
 
-def build_dataset(dataset, tokenizer):
+def build_eval_dataset(dataset, tokenizer):
 
     instruction_prefix = "[INST]\n{prompt}[/INST]"
     instruction = "[INST]\n{prompt}[/INST]{answer}"
@@ -41,10 +41,18 @@ def build_dataset(dataset, tokenizer):
     prompts_prefix = []
     prompts_a = []
     prompts_b = []
+    answers = []
     for index, example in dataset.iterrows():
         prompts_prefix.append(instruction_prefix.format(prompt=example["prompt"]))
         prompts_a.append(instruction.format(prompt=example["prompt"], answer=example["response_a"]))
         prompts_b.append(instruction.format(prompt=example["prompt"], answer=example["response_b"]))
+
+        if example["winner_model_a"] == 1:
+            answers.append([1, 0])
+        elif example["winner_model_b"] == 1:
+            answers.append([0, 1])
+        else:
+            answers.append([1, 1])
 
     sample_idx = random.randint(0, len(prompts_prefix)-1)
 
@@ -61,7 +69,7 @@ def build_dataset(dataset, tokenizer):
     prefix_lens = prefix_lens * 2
     prompts = prompts_a + prompts_b
 
-    return prompts, prefix_lens
+    return prompts, prefix_lens, answers
 
 if __name__ == "__main__":
     random.seed(42)
@@ -73,23 +81,36 @@ if __name__ == "__main__":
     dataset = load_dataset(data_type, args.model_name)
 
     # 初始化结果字典
-    results = {"logit": []}
+    results = {}
 
     model_path = os.path.join("models", args.model_name)
     
     tokenizer = AutoTokenizer.from_pretrained(model_path)
-    prompts, prefix_lens = build_dataset(dataset["los"], tokenizer)
+    prompts_win, prefix_lens_win, answers_win = build_eval_dataset(dataset["win"], tokenizer)
+    prompts_los, prefix_lens_los, answers_los = build_eval_dataset(dataset["los"], tokenizer)
 
-    results = batched_evaluation(
+    prompts = prompts_win + prompts_los
+    prefix_lens = prefix_lens_win + prefix_lens_los
+    answers = answers_win + answers_los
+
+    pred_scores = batched_evaluation(
         model_path,
         prompts,
         temperature=0.0,
         top_p=1.0,
     )
 
+    pred_scores_a = [pred for pred in pred_scores[0::2]]
+    pred_scores_b = [pred for pred in pred_scores[1::2]]
+    pred_scores = [[pred[0], pred[1]] for pred in zip(pred_scores_a, pred_scores_b)]
+
+    win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
+    los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
+    bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
+    result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
+
     # 将所有结果写入 JSON 文件
-    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-pred-relia.json"
+    relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-ans-relia.json"
+    results = {"logit": pred_scores}
     with open(relia_file, "w") as file_out:
         json.dump(results, file_out, indent=4)
-
-    print(f"All reliability scores have been saved to {relia_file}.")
