@@ -27,7 +27,14 @@ def batched_evaluation(
 
     pred_list = model.generate(prompts, sampling_params)
 
-    prompt_logprobs = [[list(lp.items())[0][1] for lp in pl.prompt_logprobs[1:]] for pl in pred_list]
+    
+    # prompt_logprobs = [[list(lp.items())[0][1] for lp in pl.prompt_logprobs[1:]] for pl in pred_list]
+    prompt_logprobs = []
+    for pl in pred_list:
+        try:
+            prompt_logprobs.append([list(lp.items())[0][1] for lp in pl.prompt_logprobs[1:]])
+        except:
+            import pdb;pdb.set_trace()
 
     return prompt_logprobs
 
@@ -40,8 +47,7 @@ def build_eval_dataset(dataset, tokenizer):
     answers = []
     prefix_lens = []
     for index, example in dataset.iterrows():
-        if index >= 50:
-            break
+
         prompts.append(instruction.format(prompt=example["prompt"], answer=example["response_a"]))
         prompts.append(instruction.format(prompt=example["prompt"], answer=example["response_b"]))
 
