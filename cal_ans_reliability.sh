@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=1,2,3,4
+export CUDA_VISIBLE_DEVICES=2,3,4,5
 
 python3 -u cal_ans_reliability.py \
     --model-name "mixtral-8x7b-instruct-v0.1" \
