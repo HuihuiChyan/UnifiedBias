@@ -109,7 +109,9 @@ if __name__ == "__main__":
     win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
     los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
     bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
-    result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
+    result_dicts = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
+
+    print(result_dicts)
 
     # 将所有结果写入 JSON 文件
     relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-ans-relia.json"
