@@ -89,7 +89,17 @@ def build_dataset(dataset, tokenizer):
 
     import pdb;pdb.set_trace()
 
-    return prompts_prefix, prompts_a, prompts_b
+    output_ids = token_ids_a + token_ids_b
+    prefix_lens = [len(t) for t in token_ids_prefix]
+    whole_lens_a = [len(t) for t in token_ids_a]
+    whole_lens_b = [len(t) for t in token_ids_b]
+    target_lens_a = [len(t[0])-len(t[1]) for t in zip(whole_lens_a, prefix_lens)]
+    target_lens_b = [len(t[0])-len(t[1]) for t in zip(whole_lens_b, prefix_lens)]
+    
+    prefix_lens = prefix_lens * 2
+    target_lens = target_lens_a + target_lens_b
+
+    return output_ids, prefix_lens, target_lens
 
 if __name__ == "__main__":
     random.seed(42)
