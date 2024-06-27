@@ -97,6 +97,8 @@ def build_dataset(dataset, tokenizer):
     prefix_lens = prefix_lens * 2
     target_lens = target_lens_a + target_lens_b
 
+    target_lens = [1 if t == 0 else t for t in target_lens]
+
     return output_ids, prefix_lens, target_lens
 
 if __name__ == "__main__":
