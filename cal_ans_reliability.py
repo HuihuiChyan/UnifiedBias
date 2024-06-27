@@ -83,8 +83,9 @@ def build_dataset(dataset, tokenizer):
     print(prompts_b[sample_idx]+"\n")
     print("******************************Sampled Prompt Ended****************************"+"\n")
 
-    token_ids_a = tokenizer(prompts_a)
-    token_ids_b = tokenizer(prompts_b)
+    token_ids_a = tokenizer(prompts_a)["input_ids"]
+    token_ids_b = tokenizer(prompts_b)["input_ids"]
+    token_ids_prefix = tokenizer(prompts_prefix)["input_ids"]
 
     import pdb;pdb.set_trace()
 
