@@ -65,17 +65,17 @@ def get_single_evaluation(
 def build_dataset(dataset, tokenizer):
 
     instruction_prefix = "[INST]\n{prompt}[/INST]"
-    instruction = "[INST]\n{prompt}[/INST]{response}"
+    instruction = "[INST]\n{prompt}[/INST]{answer}"
 
     prompts_prefix = []
     prompts_a = []
     prompts_b = []
     for index, example in dataset.iterrows():
         prompts_prefix.append(instruction_prefix.format(prompt=example["prompt"]))
-        prompts_a.append(instruction.format(prompt=example["prompt"], response=example["response_a"]))
-        prompts_b.append(instruction.format(prompt=example["prompt"], response=example["response_b"]))
+        prompts_a.append(instruction.format(prompt=example["prompt"], answer=example["response_a"]))
+        prompts_b.append(instruction.format(prompt=example["prompt"], answer=example["response_b"]))
 
-    sample_idx = random.randint(0, len(prompts)-1)
+    sample_idx = random.randint(0, len(prompts_prefix)-1)
 
     print("********************************Sampled Prompt********************************")
     print(prompts_prefix[sample_idx]+"\n")
@@ -103,11 +103,12 @@ if __name__ == "__main__":
     results = {"logit": [], "entropy": [], "variance": []}
 
     model_path = os.path.join("models", args.model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto").half()
+    
     tokenizer = AutoTokenizer.from_pretrained(model_path)
-    model.eval()
-
     output_ids, prefix_lens, target_lens = build_dataset(dataset["los"], tokenizer)
+
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto").half()
+    model.eval()
 
     batch_size = 4
     max_length = max([l[0]+l[1] for l in zip(prefix_lens, target_lens)])
