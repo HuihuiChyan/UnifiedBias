@@ -3,3 +3,4 @@ orig_data/
 .DS_Store
 models/
 self-llama-2-70b-chat-pairwise-ans-relia.json
+output_data/
