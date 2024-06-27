@@ -52,6 +52,7 @@ def get_multi_answer(
 def get_single_evaluation(
     model,
     tokenizer,
+    max_length,
     output_ids,
     prefix_len,
     target_len,
@@ -64,6 +65,10 @@ def get_single_evaluation(
     masked_pos = [(torch.arange(len(output_ids[i])) >= prefix_len[i]).long() for i in range(len(output_ids))]
 
     pad_token_id = tokenizer.convert_tokens_to_ids(tokenizer.eos_token)
+
+    # pad to max_length first to avoid OOM during inference
+    output_ids[0] = torch.nn.ConstantPad1d((0, max_length - output_ids[0].shape[1]), pad_token_id)(output_ids[0])
+    masked_pos[0] = torch.nn.ConstantPad1d((0, max_length - masked_pos[0].shape[1]), 0)(masked_pos[0])
     output_ids = torch.nn.utils.rnn.pad_sequence(output_ids, batch_first=True, padding_value=pad_token_id)
     masked_pos = torch.nn.utils.rnn.pad_sequence(masked_pos, batch_first=True, padding_value=0)
 
