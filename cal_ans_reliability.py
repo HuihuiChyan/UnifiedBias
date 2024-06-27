@@ -62,7 +62,7 @@ def get_single_evaluation(
 
     return {"logit": evaluation_logit, "entropy": evaluation_ent, "variance": evaluation_var}
 
-def build_dataset(dataset, tokenizer, instruction, instruction_prefix):
+def build_dataset(dataset, tokenizer):
 
     instruction_prefix = "[INST]\n{prompt}[/INST]"
     instruction = "[INST]\n{prompt}[/INST]{response}"
@@ -98,6 +98,8 @@ if __name__ == "__main__":
     data_type = args.data_type[0]
 
     dataset = load_dataset(data_type, args.model_name)
+
+    output_ids, prefix_lens, target_lens = build_dataset(dataset, tokenizer)
 
     # 初始化结果字典
     results = {"logit": [], "entropy": [], "variance": []}
