@@ -83,8 +83,10 @@ def batched_generation(
         temperature=temperature,
         max_tokens=max_new_token,
         top_p=top_p,
+        prompt_logprobs=1,
     )
     print("VLLM model loaded!")
+    import pdb;pdb.set_trace()
 
     pred_list = model.generate(prompts, sampling_params)
     pred_list = [it.outputs[0].text for it in pred_list]
@@ -216,7 +218,8 @@ def build_dataset(dataset, instruction, infer_mode):
     prompts = []
     answers = []
     for index, example in dataset.iterrows():
-
+        if index >= 50:
+            import pdb;pdb.set_trace()
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
                                         answer_a=example["response_a"],
