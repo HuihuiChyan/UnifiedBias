@@ -18,7 +18,7 @@ def build_params():
     parser.add_argument(
         "--model-name",
         type=str,
-        choices=("Mixtral-8x7B-Instruct-v0.1", "llama-2-70b-chat"),
+        choices=("mixtral-8x7b-instruct-v0.1", "llama-2-70b-chat"),
         default=None,
     )
     parser.add_argument(
