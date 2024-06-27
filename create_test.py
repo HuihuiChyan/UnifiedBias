@@ -30,30 +30,28 @@ df["prompt"] = df["prompt"].apply(lambda x:str(x).encode('utf-8', 'replace').dec
 df["response_a"] = df["response_a"].apply(lambda x:str(x).encode('utf-8', 'replace').decode('utf-8'))
 df["response_b"] = df["response_b"].apply(lambda x:str(x).encode('utf-8', 'replace').decode('utf-8'))
 
-all_models = sorted(list(set(df["model_a"].to_numpy().tolist())))
-print(all_models) # 共计 64个模型
+# all_models = sorted(list(set(df["model_a"].to_numpy().tolist())))
+# print(all_models) # 共计 64个模型
 
-all_models_count = {}
-for model_name in all_models:
-    all_models_count[model_name] = len(df[(df["model_a"] == model_name) | (df["model_b"] == model_name)])
+# all_models_count = {}
+# for model_name in all_models:
+#     all_models_count[model_name] = len(df[(df["model_a"] == model_name) | (df["model_b"] == model_name)])
 
-print(all_models_count)
-
-import pdb;pdb.set_trace()
+# print(all_models_count)
 
 # 我们选择了比较有代表性的四个模型作为本次评测的基础
-evaluator_models = ["gpt-4-1106-preview", "gpt-3.5-turbo-0613", "vicuna-13b", "llama-2-13b-chat"]
+evaluator_models = ["gpt-4-1106-preview", "gpt-3.5-turbo-0613", "mixtral-8x7b-instruct-v0.1", "llama-2-70b-chat"]
 # 和四个模型同属一个group的模型也应该考虑在内
 evaluator_models_familiy = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-0314', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-1106',
                             'gpt-4-0125-preview', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-1106-preview',
-                            'vicuna-13b', 'vicuna-33b', 'vicuna-7b',
+                            'mixtral-8x7b-instruct-v0.1', 'mistral-7b-instruct', 'mistral-7b-instruct-v0.2', 'mistral-medium',
                             'llama-2-13b-chat', 'llama-2-70b-chat', 'llama-2-7b-chat']
 
 evaluator_groups = {}
 evaluator_groups["gpt-3.5-turbo-0613"] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-0314', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-1106']
 evaluator_groups["gpt-4-1106-preview"] = ['gpt-4-0125-preview', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-1106-preview']
-evaluator_groups["vicuna-13b"] = ['vicuna-13b', 'vicuna-33b', 'vicuna-7b']
-evaluator_groups["llama-2-13b-chat"] = ['llama-2-13b-chat', 'llama-2-70b-chat', 'llama-2-7b-chat']
+evaluator_groups["mixtral-8x7b-instruct-v0.1"] = ['mixtral-8x7b-instruct-v0.1', 'mistral-7b-instruct', 'mistral-7b-instruct-v0.2', 'mistral-medium']
+evaluator_groups["llama-2-70b-chat"] = ['llama-2-13b-chat', 'llama-2-70b-chat', 'llama-2-7b-chat']
 
 def balance_length(sub_df, average_and_concat=False):
     verbo_win_df = sub_df[((sub_df["response_a"] > sub_df["response_b"]) & (sub_df["winner_model_a"]==1)) | ((sub_df["response_a"] < sub_df["response_b"]) & (sub_df["winner_model_b"]==1))]
