@@ -87,14 +87,12 @@ def build_dataset(dataset, tokenizer):
     token_ids_b = tokenizer(prompts_b)["input_ids"]
     token_ids_prefix = tokenizer(prompts_prefix)["input_ids"]
 
-    import pdb;pdb.set_trace()
-
     output_ids = token_ids_a + token_ids_b
     prefix_lens = [len(t) for t in token_ids_prefix]
     whole_lens_a = [len(t) for t in token_ids_a]
     whole_lens_b = [len(t) for t in token_ids_b]
-    target_lens_a = [len(t[0])-len(t[1]) for t in zip(whole_lens_a, prefix_lens)]
-    target_lens_b = [len(t[0])-len(t[1]) for t in zip(whole_lens_b, prefix_lens)]
+    target_lens_a = [t[0]-t[1] for t in zip(whole_lens_a, prefix_lens)]
+    target_lens_b = [t[0]-t[1] for t in zip(whole_lens_b, prefix_lens)]
     
     prefix_lens = prefix_lens * 2
     target_lens = target_lens_a + target_lens_b
