@@ -29,8 +29,6 @@ def batched_evaluation(
 
     prompt_logprobs = [[list(lp.items())[0][1] for lp in pl.prompt_logprobs[1:]] for pl in pred_list]
 
-    prompt_logprobs = [sum(pl)/len(pl) for pl in prompt_logprobs]
-
     return prompt_logprobs
 
 def build_eval_dataset(dataset, tokenizer):
@@ -90,12 +88,14 @@ if __name__ == "__main__":
     prefix_lens = prefix_lens_win + prefix_lens_los
     answers = answers_win + answers_los
 
-    pred_scores = batched_evaluation(
+    prompt_logprobs = batched_evaluation(
         model_path,
         prompts,
         temperature=0.0,
         top_p=1.0,
     )
+
+    pred_scores = [sum(pl)/len(pl) for pl in prompt_logprobs]
 
     pred_scores_a = [pred for pred in pred_scores[0::2]]
     pred_scores_b = [pred for pred in pred_scores[1::2]]
@@ -110,6 +110,6 @@ if __name__ == "__main__":
 
     # 将所有结果写入 JSON 文件
     relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-ans-relia.json"
-    results = {"logit": pred_scores}
+    results = {"logit": pred_scores, "prompt_logprobs": prompt_logprobs}
     with open(relia_file, "w") as file_out:
         json.dump(results, file_out, indent=4)
