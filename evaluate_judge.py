@@ -89,8 +89,6 @@ def batched_generation(
 
     pred_list = model.generate(prompts, sampling_params)
 
-    [list(lp.items())[0][0] for lp in pred_list[0].prompt_logprobs[1:]]
-    import pdb;pdb.set_trace()
     pred_list = [it.outputs[0].text for it in pred_list]
 
     return pred_list
