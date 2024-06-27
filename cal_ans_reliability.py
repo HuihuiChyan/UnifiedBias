@@ -102,6 +102,7 @@ if __name__ == "__main__":
     # 初始化结果字典
     results = {"logit": [], "entropy": [], "variance": []}
 
+    model_path = os.path.join("models", args.model_name)
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto").half()
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model.eval()
