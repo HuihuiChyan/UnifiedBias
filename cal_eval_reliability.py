@@ -80,21 +80,21 @@ def get_single_evaluation(
     shifted_output_ids = torch.roll(output_ids, shifts=-1)
     logprobs = torch.nn.functional.log_softmax(outputs["logits"], dim=-1)
 
+    logprobs = logprobs * masked_pos.unsqueeze(-1)
+    # 这个mask就可以解决一切问题吗？
+
     evaluation_logit = torch.gather(logprobs, dim=-1, index=shifted_output_ids.unsqueeze(-1)).squeeze(-1).sum(-1)
     evaluation_logit = [evaluation_logit[i] / target_len[i] for i in range(len(evaluation_logit))]
 
-    import pdb;pdb.set_trace()
-
     logprobs_variance = torch.var(logprobs, dim=-1)
-    logprobs_variance[output_ids == -100] = 0  # instruction masking
+    # logprobs_variance[output_ids == -100] = 0  # instruction masking
     # averaged on target length
-    evaluation_var = logprobs_variance.sum(-1)[0] / target_len
+    evaluation_var = [logprobs_variance.sum(-1)[i] / target_len[i] for i in range(len(logprobs_variance))]
 
-    logprobs[output_ids == -100] = 0  # instruction masking
     # The original entropy has a minus sign, but we remove it to keep the positive correlation
     logprobs_entropy = torch.mean(logprobs * outputs["logits"], dim=-1)
     # averaged on target length
-    evaluation_ent = logprobs_entropy.sum(-1)[0] / target_len
+    evaluation_ent = [logprobs_entropy.sum(-1)[i] / target_len[i] for i in range(len(logprobs_variance))]
 
     return {"logit": evaluation_logit, "entropy": evaluation_ent, "variance": evaluation_var}
 
