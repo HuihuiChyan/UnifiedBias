@@ -82,6 +82,8 @@ def get_single_evaluation(
     logprobs = logprobs * masked_pos.unsqueeze(-1)
     # 这个mask就可以解决一切问题吗？
 
+    import pdb;pdb.set_trace()
+
     evaluation_logit = torch.gather(logprobs, dim=-1, index=shifted_output_ids.unsqueeze(-1)).squeeze(-1).sum(-1)
     evaluation_logit = [evaluation_logit[i] / target_len[i] for i in range(len(evaluation_logit))]
 
