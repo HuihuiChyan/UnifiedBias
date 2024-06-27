@@ -2,5 +2,5 @@ orig_data/
 # *.csv
 .DS_Store
 models/
-output_data/
 self-llama-2-70b-chat-pairwise-ans-relia.json
+output_data/
