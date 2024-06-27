@@ -67,8 +67,8 @@ def get_single_evaluation(
     pad_token_id = tokenizer.convert_tokens_to_ids(tokenizer.eos_token)
 
     # pad to max_length first to avoid OOM during inference
-    output_ids[0] = torch.nn.ConstantPad1d((0, max_length - output_ids[0].shape[1]), pad_token_id)(output_ids[0])
-    masked_pos[0] = torch.nn.ConstantPad1d((0, max_length - masked_pos[0].shape[1]), 0)(masked_pos[0])
+    output_ids[0] = torch.nn.ConstantPad1d((0, max_length - output_ids[0].shape[0]), pad_token_id)(output_ids[0])
+    masked_pos[0] = torch.nn.ConstantPad1d((0, max_length - masked_pos[0].shape[0]), 0)(masked_pos[0])
     output_ids = torch.nn.utils.rnn.pad_sequence(output_ids, batch_first=True, padding_value=pad_token_id)
     masked_pos = torch.nn.utils.rnn.pad_sequence(masked_pos, batch_first=True, padding_value=0)
 
