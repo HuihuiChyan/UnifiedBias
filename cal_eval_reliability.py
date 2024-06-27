@@ -81,15 +81,11 @@ def get_single_evaluation(
     logprobs = torch.nn.functional.log_softmax(outputs["logits"], dim=-1)
 
     logprobs = logprobs * masked_pos.unsqueeze(-1)
-    # 这个mask就可以解决一切问题吗？
-
-    import pdb;pdb.set_trace()
 
     evaluation_logit = torch.gather(logprobs, dim=-1, index=shifted_output_ids.unsqueeze(-1)).squeeze(-1).sum(-1)
     evaluation_logit = [evaluation_logit[i] / target_len[i] for i in range(len(evaluation_logit))]
 
     logprobs_variance = torch.var(logprobs, dim=-1)
-    # logprobs_variance[output_ids == -100] = 0  # instruction masking
     # averaged on target length
     evaluation_var = [logprobs_variance.sum(-1)[i] / target_len[i] for i in range(len(logprobs_variance))]
 
@@ -97,6 +93,8 @@ def get_single_evaluation(
     logprobs_entropy = torch.mean(logprobs * outputs["logits"], dim=-1)
     # averaged on target length
     evaluation_ent = [logprobs_entropy.sum(-1)[i] / target_len[i] for i in range(len(logprobs_variance))]
+
+    import pdb;pdb.set_trace()
 
     return {"logit": evaluation_logit, "entropy": evaluation_ent, "variance": evaluation_var}
 
@@ -152,29 +150,30 @@ if __name__ == "__main__":
     torch.cuda.empty_cache()
 
     # 初始化结果字典
-    results = {"Entropy": [], "Variance": [], "Logit": []}
+    results = {"logit": [], "entropy": [], "variance": []}
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto",).half()
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto").half()
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model.eval()
 
-    for i in tqdm(range(len(predictions)), desc="Calculating reliability score"):
+    batch_size = 6
+    for i in tqdm(range(0, len(predictions), batch_size), desc="Calculating reliability score"):
         evaluation = get_single_evaluation(
             model,
             tokenizer,
-            output_ids[i:i+2],
-            prefix_lens[i:i+2],
-            target_lens[i:i+2],
+            output_ids[i:i+batch_size],
+            prefix_lens[i:i+batch_size],
+            target_lens[i:i+batch_size],
         )
         logit = evaluation["logit"]
         entropy = evaluation["entropy"]
         variance = evaluation["variance"]
         # 将结果添加到字典中
-        results["Logit"].append(logit.item() if isinstance(
+        results["logit"].append(logit.item() if isinstance(
             entropy, torch.Tensor) else entropy)
-        results["Entropy"].append(entropy.item() if isinstance(
+        results["entropy"].append(entropy.item() if isinstance(
             entropy, torch.Tensor) else entropy)
-        results["Variance"].append(variance.item() if isinstance(
+        results["variance"].append(variance.item() if isinstance(
             variance, torch.Tensor) else variance)
 
     # 将所有结果写入 JSON 文件
