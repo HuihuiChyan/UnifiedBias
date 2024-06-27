@@ -121,7 +121,7 @@ if __name__ == "__main__":
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto").half()
     model.eval()
 
-    batch_size = 10
+    batch_size = 8
     max_length = max([l[0]+l[1] for l in zip(prefix_lens, target_lens)])
     for i in tqdm(range(0, len(output_ids), batch_size), desc="Calculating reliability score"):
         evaluation = get_single_evaluation(
