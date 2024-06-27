@@ -51,6 +51,7 @@ def get_multi_answer(
 @torch.inference_mode()
 def get_single_evaluation(
     model,
+    tokenizer,
     output_ids,
     prefix_len,
     target_len,
@@ -62,7 +63,7 @@ def get_single_evaluation(
     output_ids = [torch.as_tensor(oi) for oi in output_ids]
     masked_pos = [(torch.arange(len(output_ids[i])) >= prefix_len[i]).long() for i in range(len(output_ids))]
 
-    pad_token_id = 128001 # tokenizer.convert_tokens_to_ids("<|end_of_text|>")
+    pad_token_id = tokenizer.convert_tokens_to_ids(tokenizer.eos_token)
     output_ids = torch.nn.utils.rnn.pad_sequence(output_ids, batch_first=True, padding_value=pad_token_id)
     masked_pos = torch.nn.utils.rnn.pad_sequence(masked_pos, batch_first=True, padding_value=0)
 
@@ -154,11 +155,13 @@ if __name__ == "__main__":
     results = {"Entropy": [], "Variance": [], "Logit": []}
 
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto",).half()
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
     model.eval()
 
     for i in tqdm(range(len(predictions)), desc="Calculating reliability score"):
         evaluation = get_single_evaluation(
             model,
+            tokenizer,
             output_ids[i:i+2],
             prefix_lens[i:i+2],
             target_lens[i:i+2],
