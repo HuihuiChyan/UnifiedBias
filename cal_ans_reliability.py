@@ -43,8 +43,8 @@ def build_eval_dataset(dataset, tokenizer):
     prompts_b = []
     answers = []
     for index, example in dataset.iterrows():
-        if index >= 50:
-            break
+        # if index >= 50:
+        #     break
         prompts_prefix.append(instruction_prefix.format(prompt=example["prompt"]))
         prompts_a.append(instruction.format(prompt=example["prompt"], answer=example["response_a"]))
         prompts_b.append(instruction.format(prompt=example["prompt"], answer=example["response_b"]))
