@@ -219,7 +219,7 @@ def build_dataset(dataset, instruction, infer_mode):
     answers = []
     for index, example in dataset.iterrows():
         if index >= 50:
-            import pdb;pdb.set_trace()
+            break
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
                                         answer_a=example["response_a"],
