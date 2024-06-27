@@ -122,6 +122,7 @@ if __name__ == "__main__":
     batch_size = 1
     max_length = max([l[0]+l[1] for l in zip(prefix_lens, target_lens)])
     for i in tqdm(range(0, len(output_ids), batch_size), desc="Calculating reliability score"):
+        import pdb;pdb.set_trace()
         evaluation = get_single_evaluation(
             model,
             tokenizer,
