@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     dataset = load_dataset(data_type, args.model_name)
 
-    output_ids, prefix_lens, target_lens = build_dataset(dataset, tokenizer)
+    
 
     # 初始化结果字典
     results = {"logit": [], "entropy": [], "variance": []}
@@ -108,6 +108,8 @@ if __name__ == "__main__":
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto").half()
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model.eval()
+
+    output_ids, prefix_lens, target_lens = build_dataset(dataset, tokenizer)
 
     batch_size = 4
     max_length = max([l[0]+l[1] for l in zip(prefix_lens, target_lens)])
