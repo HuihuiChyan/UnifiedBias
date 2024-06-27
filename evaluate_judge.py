@@ -69,8 +69,6 @@ def build_params():
     )
     return parser
 
-
-@torch.inference_mode()
 def batched_generation(
     model_path,
     prompts,
@@ -80,7 +78,7 @@ def batched_generation(
 ):
     print("Start load VLLM model!")
     import vllm
-    model = vllm.LLM(model=model_path, tensor_parallel_size=1, dtype="bfloat16", gpu_memory_utilization=0.8)
+    model = vllm.LLM(model=model_path, tensor_parallel_size=torch.cuda.device_count(), dtype="bfloat16", gpu_memory_utilization=0.9)
     sampling_params = vllm.SamplingParams(
         temperature=temperature,
         max_tokens=max_new_token,
@@ -92,54 +90,6 @@ def batched_generation(
     pred_list = [it.outputs[0].text for it in pred_list]
 
     return pred_list
-
-@timeout_decorator.timeout(60)
-def do_one_request(url, headers, data):
-    response = requests.post(url, headers=headers, data=json.dumps(data))
-    response = response.json()
-    res = response['choices'][0]['message']['content'].strip()
-
-    return res
-
-def request_gpt(prompt, model, temperature, max_new_tokens):
-    # url = "https://www.qwopenai.com/v1/chat/completions"
-    # headers = {
-    #     "Content-Type": "application/json",
-    #     "Authorization": "Bearer sk-15g5tdDeJ25iG5wX1e0790C8Bf69458dB827D9D04c66Db78",
-    # }
-    url = "https://api.ai-gaochao.cn/v1/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer sk-agEcX3Su78Bu09c2F49978C6Ba424977B936C8710fAb42E0",
-    }
-    max_tries = 5
-    res = ''
-    response = None
-    # sys_info = {"role": "system", "content": "You are a helpful and precise assistant for checking the quality of the answer."}    
-    for i in range(max_tries):
-        try:
-            data = {
-                "model": model, 
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            }
-            res = do_one_request(url, headers, data)
-            break
-        except Exception as e:
-            print("Exception! The response is " + str(response))
-            time.sleep(5)
-            continue
-    return res
-
-def gpt_scoring(prompt, model, temperature, max_new_tokens):
-
-    prediction = request_gpt(prompt, model, temperature=temperature, max_new_tokens=max_new_tokens)
-
-    counter.value += 1
-    print(f"gpt_scoring {counter.value} finished.")
-
-    return prediction
 
 def load_dataset(data_type, model_name):
     if data_type == "self":
@@ -158,54 +108,7 @@ def load_dataset(data_type, model_name):
     return data
 
 def build_prompt(model_name, infer_mode):
-    if "gpt" in model_name:
-        if infer_mode == "pairwise":
-            prompt = """[System]
-Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
-[User Question]
-{question}
-[The Start of Assistant A’s Answer]
-{answer_a}
-[The End of Assistant A’s Answer]
-[The Start of Assistant B’s Answer]
-{answer_b}
-[The End of Assistant B’s Answer]"""
-
-        elif infer_mode == "pointwise":
-            prompt = """[System]
-Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: "[[rating]]", for example: "Rating: [[5]]".
-[Question]
-{question}
-[The Start of Assistant’s Answer]
-{answer}
-[The End of Assistant’s Answer]"""
-
-    elif model_name == "vicuna-13b":
-        if infer_mode == "pairwise":
-            prompt = """A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
-
-USER: Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
-[User Question]
-{question}
-[The Start of Assistant A’s Answer]
-{answer_a}
-[The End of Assistant A’s Answer]
-[The Start of Assistant B’s Answer]
-{answer_b}
-[The End of Assistant B’s Answer]
-ASSISTANT:"""
-        elif infer_mode == "pointwise":
-            prompt = """A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
-
-USER: Please act as an impartial judge and evaluate the quality of the response provided by an AI assistant to the user question displayed below. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on a scale of 1 to 10 by strictly following this format: "[[rating]]", for example: "Rating: [[5]]".
-[Question]
-{question}
-[The Start of Assistant’s Answer]
-{answer}
-[The End of Assistant’s Answer]
-ASSISTANT:"""
-
-    else:
+    if "llama-2" in model_name.lower() or model_name.lower() == "mixtral-8x7b-instruct-v0.1":
         if infer_mode == "pairwise":
             prompt = """[INST]
 Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. You should choose the assistant that follows the user’s instructions and answers the user’s question better. Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "[[A]]" if assistant A is better, "[[B]]" if assistant B is better, and "[[C]]" for a tie.
@@ -225,7 +128,7 @@ Please act as an impartial judge and evaluate the quality of the response provid
 {question}
 [The Start of Assistant’s Answer]
 {answer}
-[The End of Assistant’s Answer] [/INST]"""        
+[The End of Assistant’s Answer] [/INST]"""
 
     return prompt
 
@@ -313,9 +216,6 @@ def build_dataset(dataset, instruction, infer_mode):
     prompts = []
     answers = []
     for index, example in dataset.iterrows():
-        
-        # if index >= 100:
-        #     break
 
         if infer_mode == "pairwise":
             prompt = instruction.format(question=example["prompt"],
@@ -342,10 +242,6 @@ def build_dataset(dataset, instruction, infer_mode):
     
     return prompts, answers
     
-
-def init(c):
-    global counter
-    counter = c
 
 if __name__ == "__main__":
 
@@ -379,27 +275,11 @@ if __name__ == "__main__":
                 lines = [json.loads(line.strip()) for line in fin.readlines()]
                 predictions = [line["prediction"] for line in lines]
         else:
-            if "gpt" not in args.model_name:
-                predictions = batched_generation(os.path.join("models", args.model_name), 
-                                                 prompts,
-                                                 max_new_token=args.max_new_token,
-                                                 temperature=args.temperature,
-                                                 top_p=args.top_p)
-            else:
-                manager = multiprocessing.Manager()
-                counter = manager.Value("counter", 0)
-                pool = multiprocessing.Pool(processes=args.process_num, initializer=init, initargs=(counter,))
-                
-                len_prompts = len(prompts)
-                print(f"Totally {len_prompts} prompts.")
-
-                if args.process_num == 1:
-                    predictions = [gpt_scoring(sample, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                                   for sample in prompts]
-                else:
-                    pool_fn = partial(gpt_scoring, model=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_token)
-                    predictions = pool.map(pool_fn, prompts)
-                    pool.close()
+            predictions = batched_generation(os.path.join("models", args.model_name), 
+                                             prompts,
+                                             max_new_token=args.max_new_token,
+                                             temperature=args.temperature,
+                                             top_p=args.top_p)
 
         pred_scores = [parse_predictions(p, args.infer_mode) for p in predictions]
         with open(f"output_data/{data_type}-{args.model_name}-{args.infer_mode}.jsonl", "w", encoding="utf-8") as fout:

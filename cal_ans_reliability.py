@@ -7,47 +7,7 @@ import gc
 import json
 import vllm
 import copy
-from evaluate_bias import load_dataset, build_dataset, build_params
-
-def get_multi_answer(
-    model_path,
-    prompts,
-    max_new_token=2048,
-    temperature=0.1,
-    top_p=1.0,
-):
-    print("Start load VLLM model!")
-    stop_token_ids = [tokenizer.eos_token_id]
-    # if "Llama3" in model_path:
-    #     stop_token_ids = [tokenizer.eos_token_id]
-    # else:
-    #     stop_token_ids = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
-    model = vllm.LLM(model=model_path, tensor_parallel_size=torch.cuda.device_count(), dtype="bfloat16", gpu_memory_utilization=0.8)
-    sampling_params = vllm.SamplingParams(
-        temperature=temperature,
-        max_tokens=max_new_token,
-        top_p=top_p,
-        stop_token_ids=stop_token_ids,
-    )
-    print("VLLM model loaded!")
-
-    tokenizer = model.get_tokenizer()
-    MAX_LEN = model.llm_engine.model_config.max_model_len - 512
-    prompt_ids = [tokenizer.encode(prompt)[-MAX_LEN:] for prompt in prompts]
-
-    pred_list = model.generate(prompt_token_ids=prompt_ids, sampling_params=sampling_params)
-
-    prompt_token_ids = [it.prompt_token_ids for it in pred_list]
-    output_token_ids = [it.outputs[0].token_ids for it in pred_list]
-
-    prefix_lens = [len(prompt_ids) for prompt_ids in prompt_token_ids]
-    target_lens = [len(output_ids) for output_ids in output_token_ids]
-
-    output_tokens = [it.outputs[0].text for it in pred_list]
-
-    output_ids = [ids[0]+ids[1] for ids in zip(prompt_token_ids, output_token_ids)]
-
-    return output_tokens, prefix_lens, target_lens, output_ids
+from evaluate_judge import load_dataset, build_params
 
 @torch.inference_mode()
 def get_single_evaluation(
@@ -102,6 +62,34 @@ def get_single_evaluation(
 
     return {"logit": evaluation_logit, "entropy": evaluation_ent, "variance": evaluation_var}
 
+def build_dataset(dataset, tokenizer, instruction, instruction_prefix):
+
+    instruction_prefix = "[INST]\n{prompt}[/INST]"
+    instruction = "[INST]\n{prompt}[/INST]{response}"
+
+    prompts_prefix = []
+    prompts_a = []
+    prompts_b = []
+    for example in dataset:
+        prompts_prefix.append(instruction_prefix.format(prompt=example["prompt"]))
+        prompts_a.append(instruction.format(prompt=example["prompt"], response=example["response_a"]))
+        prompts_b.append(instruction.format(prompt=example["prompt"], response=example["response_b"]))
+
+    sample_idx = random.randint(0, len(prompts)-1)
+
+    print("********************************Sampled Prompt********************************")
+    print(prompts_prefix[sample_idx]+"\n")
+    print(prompts_a[sample_idx]+"\n")
+    print(prompts_b[sample_idx]+"\n")
+    print("******************************Sampled Prompt Ended****************************"+"\n")
+
+    token_ids_a = tokenizer(prompts_a)
+    token_ids_b = tokenizer(prompts_b)
+
+    import pdb;pdb.set_trace()
+
+    return prompts_prefix, prompts_a, prompts_b
+
 if __name__ == "__main__":
     random.seed(42)
     parser = build_params()
@@ -110,28 +98,6 @@ if __name__ == "__main__":
     data_type = args.data_type[0]
 
     dataset = load_dataset(data_type)
-
-    instruction = instruction = "[INST]\n{prompt} [/INST]"
-
-    prompts = []
-    for example in dataset:
-        prompts.append(instruction.format(prompt=example["prompt"]))
-
-    sample_idx = random.randint(0, len(prompts)-1)
-
-    print("********************************Sampled Prompt********************************")
-    print(prompts[sample_idx]+"\n")
-    print("******************************Sampled Prompt Ended****************************"+"\n")
-
-    model_path = os.path.join("models", args.model_name)
-    predictions, prefix_lens, target_lens, output_ids = get_multi_answer(model_path, prompts, args.max_new_token)
-
-    print("*******************************Sampled Prediction*****************************")
-    print(predictions[sample_idx]+"\n")
-    print("****************************Sampled Prediction Ended**************************"+"\n")
-
-    gc.collect()
-    torch.cuda.empty_cache()
 
     # 初始化结果字典
     results = {"logit": [], "entropy": [], "variance": []}
