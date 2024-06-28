@@ -271,8 +271,7 @@ if __name__ == "__main__":
         #     prompts.extend(prompts_split)
         #     answers.extend(answers_split)
 
-        prompts, answers = build_dataset(dataset, instruction, args.infer_mode)
-
+        prompts, answers = build_dataset(data, instruction, args.infer_mode)
 
         print("********************************Sampled Prompt********************************")
         print(prompts[random.randint(0, len(prompts)-1)]+"\n")
