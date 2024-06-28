@@ -31,7 +31,7 @@ def batched_evaluation(
     # prompt_logprobs = [[list(lp.items())[0][1] for lp in pl.prompt_logprobs[1:]] for pl in pred_list]
     prompt_logprobs = []
     for pl in pred_list:
-        if pl = None:
+        if pl == None:
             prompt_logprobs.append([0])
         else:
             prompt_logprobs.append([list(lp.items())[0][1] for lp in pl.prompt_logprobs[1:]])
