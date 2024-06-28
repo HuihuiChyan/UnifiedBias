@@ -23,7 +23,6 @@ with open(relia_file, "r") as file_in:
             if heat_dict[str(i*10+j)] != []:
                 heat_list.append(sum(heat_dict[str(i)]) / len(heat_dict[str(i)]))
 
-import pdb;pdb.set_trace()
 heat_list = np.array(heat_list)
 posi_list = np.arange(len(heat_list))
 plt.plot(posi_list, heat_list)  # Plot the chart

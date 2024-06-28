@@ -90,8 +90,8 @@ def create_verbo_bias_data(df, sample_num=500):
 
     new_df = pd.concat(new_df)
 
-    new_df_rev = reverse_position(new_df)
-    new_df = pd.concat([new_df, new_df_rev])
+    # new_df_rev = reverse_position(new_df)
+    # new_df = pd.concat([new_df, new_df_rev])
 
     new_df.to_csv(f'test_data/same_verbo.csv', index=False)
 
