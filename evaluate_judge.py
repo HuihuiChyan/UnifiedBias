@@ -273,6 +273,8 @@ if __name__ == "__main__":
 
         prompts, answers = build_dataset(data, instruction, args.infer_mode)
 
+        import pdb;pdb.set_trace()
+
         print("********************************Sampled Prompt********************************")
         print(prompts[random.randint(0, len(prompts)-1)]+"\n")
         print("******************************Sampled Prompt Ended****************************"+"\n")

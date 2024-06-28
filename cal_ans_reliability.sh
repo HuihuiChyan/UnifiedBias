@@ -3,5 +3,5 @@ export CUDA_VISIBLE_DEVICES=2,3,4,5
 python3 -u cal_ans_reliability.py \
     --model-name "llama-2-70b-chat" \
     --infer-mode "pairwise" \
-    --data-type "position" \
+    --data-type "verbo_same" \
     --max-new-token 512

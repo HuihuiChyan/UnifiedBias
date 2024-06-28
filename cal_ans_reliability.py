@@ -87,12 +87,14 @@ if __name__ == "__main__":
     model_path = os.path.join("models", args.model_name)
     
     tokenizer = AutoTokenizer.from_pretrained(model_path)
-    prompts_win, prefix_lens_win, answers_win = build_eval_dataset(dataset["win"], tokenizer)
-    prompts_los, prefix_lens_los, answers_los = build_eval_dataset(dataset["los"], tokenizer)
+    # prompts_win, prefix_lens_win, answers_win = build_eval_dataset(dataset["win"], tokenizer)
+    # prompts_los, prefix_lens_los, answers_los = build_eval_dataset(dataset["los"], tokenizer)
 
-    prompts = prompts_win + prompts_los
-    prefix_lens = prefix_lens_win + prefix_lens_los
-    answers = answers_win + answers_los
+    # prompts = prompts_win + prompts_los
+    # prefix_lens = prefix_lens_win + prefix_lens_los
+    # answers = answers_win + answers_los
+
+    prompts, prefix_lens, answers = build_eval_dataset(dataset, tokenizer)
 
     prompt_logprobs = batched_evaluation(
         model_path,
@@ -107,12 +109,12 @@ if __name__ == "__main__":
     pred_scores_b = [pred for pred in pred_scores[1::2]]
     pred_scores = [[pred[0], pred[1]] for pred in zip(pred_scores_a, pred_scores_b)]
 
-    win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
-    los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
-    bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
-    result_dicts = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
+    # win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
+    # los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
+    # bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
+    # result_dicts = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
 
-    print(result_dicts)
+    print(calculate_metrics(answers, pred_scores, args.infer_mode))
 
     # 将所有结果写入 JSON 文件
     relia_file = f"output_data/{data_type}-{args.model_name}-{args.infer_mode}-ans-relia.json"
