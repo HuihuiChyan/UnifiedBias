@@ -23,7 +23,7 @@ def build_params():
     )
     parser.add_argument(
         "--data-type",
-        type=str,\
+        type=str,
         nargs='+',
         choices=("self", "position", "verbosity", "same_verbo"),
         default=None,
@@ -94,6 +94,9 @@ def batched_generation(
     return pred_list
 
 def load_dataset(data_type, model_name):
+    if data_type == "same_verbo":
+        return pd.read_csv(f"test_data/same_verbo.csv")
+
     if data_type == "self":
         win_data = pd.read_csv(f"test_data/self_win_{model_name}.csv")
         los_data = pd.read_csv(f"test_data/self_los_{model_name}.csv")
@@ -257,16 +260,19 @@ if __name__ == "__main__":
         
         instruction = build_prompt(args.model_name, args.infer_mode)
 
-        prompts = []
-        answers = []
-        for data_split in ["win", "los"]:
+        # prompts = []
+        # answers = []
+        # for data_split in ["win", "los"]:
             
-            dataset = data[data_split]
+        #     dataset = data[data_split]
 
-            prompts_split, answers_split = build_dataset(dataset, instruction, args.infer_mode)
+        #     prompts_split, answers_split = build_dataset(dataset, instruction, args.infer_mode)
 
-            prompts.extend(prompts_split)
-            answers.extend(answers_split)
+        #     prompts.extend(prompts_split)
+        #     answers.extend(answers_split)
+
+        prompts, answers = build_dataset(dataset, instruction, args.infer_mode)
+
 
         print("********************************Sampled Prompt********************************")
         print(prompts[random.randint(0, len(prompts)-1)]+"\n")
@@ -298,12 +304,15 @@ if __name__ == "__main__":
             predictions = [[pred[0], pred[1]] for pred in zip(predictions_a, predictions_b)]
             pred_scores = [[pred[0], pred[1]] for pred in zip(pred_scores_a, pred_scores_b)]
 
-        win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
-        los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
-        bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
-        result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
+        # win_acc = calculate_metrics(answers[:len(answers)//2], pred_scores[:len(answers)//2], args.infer_mode)
+        # los_acc = calculate_metrics(answers[len(answers)//2:], pred_scores[len(answers)//2:], args.infer_mode)
+        # bias_diff = calculate_bias_diff(answers[:len(answers)//2], pred_scores[:len(answers)//2], answers[len(answers)//2:], pred_scores[len(answers)//2:])
+        # result_dicts[data_type] = {"win_acc": win_acc, "los_acc": los_acc, "diff": win_acc-los_acc, "bias_diff": bias_diff}
 
-        print(result_dicts)
+        # print(result_dicts)
+
+        acc = calculate_metrics(answers, pred_scores, args.infer_mode)
+        print(acc)
 
     for data_type in args.data_type:
         print("*****************Results**********************")
