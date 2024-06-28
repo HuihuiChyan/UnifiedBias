@@ -83,7 +83,7 @@ def create_verbo_bias_data(df, sample_num=500):
     new_df = []
     total_len = 0
     for i in range(100):
-        new_df.append(df[(abs(df["length_diff"])==i) & (df["response_a"]!=df["response_b"])])
+        new_df.append(df[(abs(df["length_diff"])==i) & (df["response_a"]!=df["response_b"]) & (df["winner_model_tie"] != 0)])
         total_len += len(new_df[-1])
         if total_len >= sample_num:
             break

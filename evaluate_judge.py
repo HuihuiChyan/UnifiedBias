@@ -186,8 +186,6 @@ def calculate_metrics(y_true_list, y_pred_list, infer_type):
     y_true = translate_score_to_win_list(y_true_list)
     y_pred = translate_score_to_win_list(y_pred_list)
 
-    import pdb;pdb.set_trace()
-
     accuracy = accuracy_score(y_true, y_pred)
 
     return accuracy
