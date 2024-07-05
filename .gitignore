@@ -1,4 +1,5 @@
 orig_data/
+# .__pycache__/
 # *.csv
 .DS_Store
 models/
